@@ -20,6 +20,7 @@ public class Instructions {
         // Go through all the label names on this instruction - if isn't already in the labels map, create and bind it;
         // if it is, bind it to this instruction
         for (var labelName : instr.labels()) {
+            System.out.println(labelName);
             switch (labels.getOrDefault(labelName, null)) {
                 case null -> labels.put(labelName, cb.newBoundLabel());
                 case Label label -> cb.labelBinding(label);
@@ -56,8 +57,16 @@ public class Instructions {
             case "multianewarray" -> {
                 testOperands(instr, Operand.Identifier.class, Operand.Int.class);
                 String className = ((Operand.Identifier)operands.getFirst()).text();
+                var classDesc = ClassDesc.of(className.replaceAll("/", "."));
                 int dims = ((Operand.Int)operands.get(1)).value();
-                enter(instr.opcode(), new Object[] { className, (Integer)dims }, cb);
+                enter(instr.opcode(), new Object[] { classDesc, (Integer)dims }, cb);
+            }
+
+            case "new" -> {
+                testOperands(instr, Operand.Identifier.class);
+                String className = ((Operand.Identifier)operands.getFirst()).text();
+                var classDesc = ClassDesc.of(className.replaceAll("/", "."));
+                enter(instr.opcode(), new Object[] { classDesc }, cb);
             }
 
             case "newarray" -> {

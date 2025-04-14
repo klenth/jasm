@@ -280,6 +280,18 @@ public class JasmParser {
             String labelName = head.substring(0, head.length() - 1).toString().trim();
             listener.codeLabel(this, labelName);
             processCodeLine(tail, StringView.of(""));
+        } else if (head.toString().startsWith(".")) {
+            fireExceptionOccurred(
+                "Invalid directive",
+                lineNumber, head.start(),
+                head.source()
+            );
+        } else if (!head.isEmpty() && !Character.isAlphabetic(head.codePointAt(0))) {
+            fireExceptionOccurred(
+                "Unexpected token",
+                lineNumber, head.start(),
+                head.source()
+            );
         } else if (!head.isBlank()) {
             String opcode = head.toString();
             List<StringView> operandStrings = tail.split(' ', StringView.Quoted.Ignore);

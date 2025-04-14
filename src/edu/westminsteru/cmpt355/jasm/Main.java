@@ -28,8 +28,6 @@ public class Main implements JasmParserListener {
             
             .method private static fizzbuzz (I)V
             .code
-            .limit locals 2
-            .limit stack 100
             iconst_0
             istore_1
             while0:
@@ -91,8 +89,6 @@ public class Main implements JasmParserListener {
             
             .method private static fibonacci (I)V
             .code
-            .limit locals 4
-            .limit stack 100
             iconst_0
             istore_1
             iconst_1
@@ -121,22 +117,20 @@ public class Main implements JasmParserListener {
             
             .method public static main ([Ljava/lang/String;)V
             .code
-            .limit locals 1
-            .limit stack 100
             new java/util/Scanner
             dup
             getstatic java/lang/System in Ljava/io/InputStream;
             invokespecial java/util/Scanner <init> (Ljava/io/InputStream;)V
-            putstatic test/$in Ljava/util/Scanner;
+            putstatic test $in Ljava/util/Scanner;
             
             getstatic java/lang/System out Ljava/io/PrintStream;
             ldc "Enter a number: "
             invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
-            getstatic test/$in Ljava/util/Scanner;
+            getstatic test $in Ljava/util/Scanner;
             invokevirtual java/util/Scanner nextDouble ()D
-            putstatic test/x D
-            ; Compute valid
-            getstatic test/x D
+            putstatic test x D
+            # Compute valid
+            getstatic test x D
             iconst_0
             i2d
             dcmpg
@@ -149,7 +143,7 @@ public class Main implements JasmParserListener {
             dup
             ifeq and-shortcircuit0
             pop
-            getstatic test/x D
+            getstatic test x D
             bipush 100
             i2d
             dcmpg
@@ -160,9 +154,9 @@ public class Main implements JasmParserListener {
             iconst_1
             endcomparison1:
             and-shortcircuit0:
-            putstatic test/valid Z
-            ; If-else
-            getstatic test/valid Z
+            putstatic test valid Z
+            # If-else
+            getstatic test valid Z
             ifeq else0
             getstatic java/lang/System out Ljava/io/PrintStream;
             ldc "This is a valid test score."
@@ -341,7 +335,7 @@ public class Main implements JasmParserListener {
     @Override
     public void codeInstruction(JasmParser parser, String opcode, List<Operand> operands) {
         this.currentMethodCodeInstructions.add(
-            new Instruction(instructionLabels, opcode, operands)
+            new Instruction(new ArrayList<>(instructionLabels), opcode, operands)
         );
         instructionLabels.clear();
     }
