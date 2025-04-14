@@ -30,4 +30,13 @@ public class Flags {
             default -> throw new IllegalArgumentException("Unknown flag: " + flag);
         };
     }
+
+    public static boolean isValidFlag(String flag) {
+        try {
+            flag(flag);
+            return true;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+    }
 }

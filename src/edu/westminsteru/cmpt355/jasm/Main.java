@@ -1,12 +1,8 @@
 package edu.westminsteru.cmpt355.jasm;
 
-import edu.westminsteru.cmpt355.jasm.parser.JvmAssemblyLexer;
-import edu.westminsteru.cmpt355.jasm.parser.JvmAssemblyParser;
-import edu.westminsteru.cmpt355.jasm.parser.JvmAssemblyParserBaseListener;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import edu.westminsteru.cmpt355.jasm.parser.*;
 
+import java.io.StringReader;
 import java.lang.classfile.*;
 import java.lang.classfile.attribute.SourceFileAttribute;
 import java.lang.constant.ClassDesc;
@@ -19,9 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Main extends JvmAssemblyParserBaseListener {
+public class Main implements JasmParserListener {
 
-    /*
     private static final String CODE = """
             .source test-input/test.l2
             .class public test
@@ -31,7 +26,7 @@ public class Main extends JvmAssemblyParserBaseListener {
             .field private static valid Z
             .field private static x D
             
-            .method private static fizzbuzz(I)V
+            .method private static fizzbuzz (I)V
             .code
             .limit locals 2
             .limit stack 100
@@ -46,11 +41,11 @@ public class Main extends JvmAssemblyParserBaseListener {
             irem
             iconst_0
             if_icmpne else3
-            getstatic java/lang/System/out Ljava/io/PrintStream;
+            getstatic java/lang/System out Ljava/io/PrintStream;
             ldc "FizzBuzz "
-            invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-            getstatic java/lang/System/out Ljava/io/PrintStream;
-            invokevirtual java/io/PrintStream/println()V
+            invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+            getstatic java/lang/System out Ljava/io/PrintStream;
+            invokevirtual java/io/PrintStream println ()V
             goto endif3
             else3:
             iload_1
@@ -58,11 +53,11 @@ public class Main extends JvmAssemblyParserBaseListener {
             irem
             iconst_0
             if_icmpne else2
-            getstatic java/lang/System/out Ljava/io/PrintStream;
+            getstatic java/lang/System out Ljava/io/PrintStream;
             ldc "Fizz "
-            invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-            getstatic java/lang/System/out Ljava/io/PrintStream;
-            invokevirtual java/io/PrintStream/println()V
+            invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+            getstatic java/lang/System out Ljava/io/PrintStream;
+            invokevirtual java/io/PrintStream println ()V
             goto endif2
             else2:
             iload_1
@@ -70,18 +65,18 @@ public class Main extends JvmAssemblyParserBaseListener {
             irem
             iconst_0
             if_icmpne else1
-            getstatic java/lang/System/out Ljava/io/PrintStream;
+            getstatic java/lang/System out Ljava/io/PrintStream;
             ldc "Buzz "
-            invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-            getstatic java/lang/System/out Ljava/io/PrintStream;
-            invokevirtual java/io/PrintStream/println()V
+            invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+            getstatic java/lang/System out Ljava/io/PrintStream;
+            invokevirtual java/io/PrintStream println ()V
             goto endif1
             else1:
-            getstatic java/lang/System/out Ljava/io/PrintStream;
+            getstatic java/lang/System out Ljava/io/PrintStream;
             iload_1
-            invokevirtual java/io/PrintStream/print(I)V
-            getstatic java/lang/System/out Ljava/io/PrintStream;
-            invokevirtual java/io/PrintStream/println()V
+            invokevirtual java/io/PrintStream print (I)V
+            getstatic java/lang/System out Ljava/io/PrintStream;
+            invokevirtual java/io/PrintStream println ()V
             endif1:
             endif2:
             endif3:
@@ -94,7 +89,7 @@ public class Main extends JvmAssemblyParserBaseListener {
             return
             .end code
             
-            .method private static fibonacci(I)V
+            .method private static fibonacci (I)V
             .code
             .limit locals 4
             .limit stack 100
@@ -106,11 +101,11 @@ public class Main extends JvmAssemblyParserBaseListener {
             iload_1
             iload_0
             if_icmpge endwhile1
-            getstatic java/lang/System/out Ljava/io/PrintStream;
+            getstatic java/lang/System out Ljava/io/PrintStream;
             iload_1
-            invokevirtual java/io/PrintStream/print(I)V
-            getstatic java/lang/System/out Ljava/io/PrintStream;
-            invokevirtual java/io/PrintStream/println()V
+            invokevirtual java/io/PrintStream print (I)V
+            getstatic java/lang/System out Ljava/io/PrintStream;
+            invokevirtual java/io/PrintStream println ()V
             iload_1
             iload_2
             iadd
@@ -124,21 +119,21 @@ public class Main extends JvmAssemblyParserBaseListener {
             return
             .end code
             
-            .method public static main([Ljava/lang/String;)V
+            .method public static main ([Ljava/lang/String;)V
             .code
             .limit locals 1
             .limit stack 100
             new java/util/Scanner
             dup
-            getstatic java/lang/System/in Ljava/io/InputStream;
-            invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
+            getstatic java/lang/System in Ljava/io/InputStream;
+            invokespecial java/util/Scanner <init> (Ljava/io/InputStream;)V
             putstatic test/$in Ljava/util/Scanner;
             
-            getstatic java/lang/System/out Ljava/io/PrintStream;
+            getstatic java/lang/System out Ljava/io/PrintStream;
             ldc "Enter a number: "
-            invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
+            invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
             getstatic test/$in Ljava/util/Scanner;
-            invokevirtual java/util/Scanner/nextDouble()D
+            invokevirtual java/util/Scanner nextDouble ()D
             putstatic test/x D
             ; Compute valid
             getstatic test/x D
@@ -169,28 +164,28 @@ public class Main extends JvmAssemblyParserBaseListener {
             ; If-else
             getstatic test/valid Z
             ifeq else0
-            getstatic java/lang/System/out Ljava/io/PrintStream;
+            getstatic java/lang/System out Ljava/io/PrintStream;
             ldc "This is a valid test score."
-            invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-            getstatic java/lang/System/out Ljava/io/PrintStream;
-            invokevirtual java/io/PrintStream/println()V
+            invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+            getstatic java/lang/System out Ljava/io/PrintStream;
+            invokevirtual java/io/PrintStream println ()V
             goto endif0
             else0:
-            getstatic java/lang/System/out Ljava/io/PrintStream;
+            getstatic java/lang/System out Ljava/io/PrintStream;
             ldc "This is an invalid test score."
-            invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-            getstatic java/lang/System/out Ljava/io/PrintStream;
-            invokevirtual java/io/PrintStream/println()V
+            invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+            getstatic java/lang/System out Ljava/io/PrintStream;
+            invokevirtual java/io/PrintStream println ()V
             endif0:
             bipush 24
-            invokestatic test/fizzbuzz(I)V
+            invokestatic test fizzbuzz (I)V
             bipush 100
-            invokestatic test/fibonacci(I)V
+            invokestatic test fibonacci (I)V
             return
             .end code
         """;
-     */
 
+    /*
     private static final String CODE = """
         .class test
         .source test.l2
@@ -204,20 +199,28 @@ public class Main extends JvmAssemblyParserBaseListener {
             return
         .end code
         """;
+    */
 
     public static void main(String... args) throws Exception {
-        var lexer = new JvmAssemblyLexer(CharStreams.fromString(CODE));
+        /*var lexer = new JvmAssemblyLexer(CharStreams.fromString(CODE));
         var parser = new JvmAssemblyParser(new CommonTokenStream(lexer));
         var listener = new Main();
         parser.addParseListener(listener);
 
-        parser.assemblyFile();
+        parser.assemblyFile();*/
 
-        byte[] data = ClassFile.of(
-            ClassFile.ShortJumpsOption.FIX_SHORT_JUMPS
-        ).build(ClassDesc.of(listener.className), listener::buildClass);
+        var listener = new Main();
+        var parser = new JasmParser(new StringReader(CODE), listener);
+        parser.parse();
 
-        Files.write(Path.of("test.class"), data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (!listener.parseErrors) {
+
+            byte[] data = ClassFile.of(
+                ClassFile.ShortJumpsOption.FIX_SHORT_JUMPS
+            ).build(ClassDesc.of(listener.className), listener::buildClass);
+
+            Files.write(Path.of("test.class"), data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        }
     }
 
     private ClassFile classFile;
@@ -230,9 +233,11 @@ public class Main extends JvmAssemblyParserBaseListener {
     private List<String> superinterfaceNames = new ArrayList<>();
     private List<FieldDefinition> fields = new ArrayList<>();
     private List<MethodDefinition> methods = new ArrayList<>();
+    private List<String> instructionLabels = new ArrayList<>();
     private List<Instruction> currentMethodCodeInstructions = null;
     private Map<MethodDefinition, MethodCode> methodCodes = new HashMap<>();
     private List<Operand> currentInstructionOperands = null;
+    private boolean parseErrors = false;
 
     private void buildClass(ClassBuilder cb) {
         int flags = Flags.flags(classFlags);
@@ -286,90 +291,63 @@ public class Main extends JvmAssemblyParserBaseListener {
     }
 
     @Override
-    public void exitSourceDirective(JvmAssemblyParser.SourceDirectiveContext ctx) {
-        sourceName = ctx.FILENAME().getText();
+    public void exceptionOccurred(JasmParser parser, JasmSyntaxException ex) {
+        ex.print(System.err);
+        parseErrors = true;
     }
 
     @Override
-    public void exitClassDirective(JvmAssemblyParser.ClassDirectiveContext ctx) {
-        if (className != null)
-            throw new RuntimeException("Multiple .class directives");
-        classId = ctx.CLASS_ID().getText();
-        className = ctx.CLASS_ID().getText();
-        classFlags = ctx.CLASS_FLAG().stream().map(TerminalNode::getText).toList();
+    public void sourceDirective(JasmParser parser, String source) {
+        this.sourceName = source;
     }
 
     @Override
-    public void exitSuperDirective(JvmAssemblyParser.SuperDirectiveContext ctx) {
-        superclassName = ctx.CLASSNAME().getText();
+    public void classDirective(JasmParser parser, String classId, List<String> flags, String className) {
+        this.classId = classId;
+        this.classFlags = flags;
+        this.className = className;
     }
 
     @Override
-    public void exitImplementsDirective(JvmAssemblyParser.ImplementsDirectiveContext ctx) {
-        superinterfaceNames.add(ctx.CLASSNAME().getText());
+    public void superDirective(JasmParser parser, String superName) {
+        this.superclassName = superName;
     }
 
     @Override
-    public void exitFieldDirective(JvmAssemblyParser.FieldDirectiveContext ctx) {
-        List<String> flags = ctx.FIELD_FLAG().stream().map(TerminalNode::getText).toList();
-        String name = ctx.FIELD_ID().getText();
-        String descriptor = ctx.FIELD_DESC().getText();
-
-        fields.add(new FieldDefinition(flags, name, descriptor));
+    public void implementsDirective(JasmParser parser, String interfaceName) {
+        this.superinterfaceNames.add(interfaceName);
     }
 
     @Override
-    public void enterMethodDirective(JvmAssemblyParser.MethodDirectiveContext ctx) {
-        currentMethodCodeInstructions = null;
+    public void fieldDirective(JasmParser parser, List<String> flags, String name, String descriptor) {
+        this.fields.add(new FieldDefinition(flags, name, descriptor));
     }
 
     @Override
-    public void exitMethodDirective(JvmAssemblyParser.MethodDirectiveContext ctx) {
-        List<String> flags = ctx.METHOD_FLAG().stream().map(TerminalNode::getText).toList();
-        String name = ctx.METHOD_ID().getText();
-        String descriptor = ctx.METHOD_DESC().getText();;
-
-        var method = new MethodDefinition(flags, name, descriptor);
-        methods.add(method);
-        if (currentMethodCodeInstructions != null)
-            methodCodes.put(method, new MethodCode(currentMethodCodeInstructions));
+    public void methodDirective(JasmParser parser, List<String> flags, String name, String descriptor) {
+        this.methods.add(new MethodDefinition(flags, name, descriptor));
     }
 
     @Override
-    public void enterMethodCode(JvmAssemblyParser.MethodCodeContext ctx) {
-        currentMethodCodeInstructions = new ArrayList<>();
+    public void codeDirective(JasmParser parser) {
+        this.currentMethodCodeInstructions = new ArrayList<>();
     }
 
     @Override
-    public void enterInstruction(JvmAssemblyParser.InstructionContext ctx) {
-        currentInstructionOperands = new ArrayList<>();
+    public void codeLabel(JasmParser parser, String labelName) {
+        this.instructionLabels.add(labelName);
     }
 
     @Override
-    public void exitOperand(JvmAssemblyParser.OperandContext ctx) {
-        Operand op = null;
-        if (ctx.INT() != null)
-            op = new Operand.Int(ctx.INT().getText());
-        else if (ctx.LONG() != null)
-            op = new Operand.Long(ctx.LONG().getText());
-        else if (ctx.DOUBLE() != null)
-            op = new Operand.Double(ctx.DOUBLE().getText());
-        else if (ctx.FLOAT() != null)
-            op = new Operand.Float(ctx.FLOAT().getText());
-        else if (ctx.STRING_STRING() != null)
-            op = new Operand.String(ctx.STRING_STRING().getText());
-        else if (ctx.CODE_WORD() != null)
-            op = new Operand.Identifier(ctx.CODE_WORD().getText());
-        else
-            throw new RuntimeException("Unknown operand: " + ctx);
-
-        currentInstructionOperands.add(op);
+    public void codeInstruction(JasmParser parser, String opcode, List<Operand> operands) {
+        this.currentMethodCodeInstructions.add(
+            new Instruction(instructionLabels, opcode, operands)
+        );
+        instructionLabels.clear();
     }
 
     @Override
-    public void exitLabelInstruction(JvmAssemblyParser.LabelInstructionContext ctx) {
-        List<String> labels = ctx.CODE_WORD().stream().map(TerminalNode::getText).toList();
-        String opcode = ctx.instruction().CODE_WORD().getText();
-        currentMethodCodeInstructions.add(new Instruction(labels, opcode, currentInstructionOperands));
+    public void endCodeDirective(JasmParser parser) {
+        methodCodes.put(methods.getLast(), new MethodCode(currentMethodCodeInstructions));
     }
 }
