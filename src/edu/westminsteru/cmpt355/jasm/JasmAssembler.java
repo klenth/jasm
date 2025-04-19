@@ -10,13 +10,32 @@ import java.lang.constant.MethodTypeDesc;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class Main implements JasmParserListener {
+public class JasmAssembler implements JasmParserListener {
 
+    @FunctionalInterface
+    private interface Failable {
+        void run() throws Exception;
+    }
+
+    private static final String CODE = """
+            .source test-input/test.l2
+            .class public test
+            .super java/lang/Object
+            
+            .method public static main ([Ljava/lang/String;)V
+            .code
+            getstatic java/lang/System out Ljava/io/PrintStream;
+            ldc "Hello, world!"
+            invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+            return
+            #.end code
+            
+            .method private abstract static foo ()V
+        """;
+
+    /*
     private static final String CODE = """
             .source test-input/test.l2
             .class public test
@@ -178,7 +197,7 @@ public class Main implements JasmParserListener {
             return
             .end code
         """;
-
+        */
     /*
     private static final String CODE = """
         .class test
@@ -196,25 +215,34 @@ public class Main implements JasmParserListener {
     */
 
     public static void main(String... args) throws Exception {
-        /*var lexer = new JvmAssemblyLexer(CharStreams.fromString(CODE));
-        var parser = new JvmAssemblyParser(new CommonTokenStream(lexer));
-        var listener = new Main();
-        parser.addParseListener(listener);
-
-        parser.assemblyFile();*/
-
-        var listener = new Main();
+        var listener = new JasmAssembler();
         var parser = new JasmParser(new StringReader(CODE), listener);
         parser.parse();
 
-        if (!listener.parseErrors) {
+        List<ErrorMessage> errors = new ArrayList<>();
 
-            byte[] data = ClassFile.of(
-                ClassFile.ShortJumpsOption.FIX_SHORT_JUMPS
-            ).build(ClassDesc.of(listener.className), listener::buildClass);
+        if (listener.errors.isEmpty()) {
+            try {
+                byte[] data = ClassFile.of(
+                    ClassFile.ShortJumpsOption.FIX_SHORT_JUMPS
+                ).build(ClassDesc.ofInternalName(listener.className), listener::buildClass);
 
-            Files.write(Path.of("test.class"), data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                Files.write(Path.of("test.class"), data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            } catch (AbortClassfileGenerationException ex) {
+                // do nothing (this exception is just to escape the Classfile callbacks)
+            } catch (Exception ex) {
+                errors.add(new ErrorMessage(ex.getMessage()));
+            }
         }
+
+        errors.addAll(listener.errors);
+
+        errors.stream()
+            .sorted(Comparator.comparing(ErrorMessage::lineNumber).thenComparing(ErrorMessage::columnNumber))
+            .forEach(em -> {
+                em.print(System.err);
+                System.err.println();
+            });
     }
 
     private ClassFile classFile;
@@ -222,7 +250,7 @@ public class Main implements JasmParserListener {
 
     private String sourceName;
     private String classId;
-    private String className, superclassName = "java/lang/Object";
+    private String className, superclassName;
     private List<String> classFlags;
     private List<String> superinterfaceNames = new ArrayList<>();
     private List<FieldDefinition> fields = new ArrayList<>();
@@ -230,8 +258,7 @@ public class Main implements JasmParserListener {
     private List<String> instructionLabels = new ArrayList<>();
     private List<Instruction> currentMethodCodeInstructions = null;
     private Map<MethodDefinition, MethodCode> methodCodes = new HashMap<>();
-    private List<Operand> currentInstructionOperands = null;
-    private boolean parseErrors = false;
+    private List<ErrorMessage> errors = new ArrayList<>();
 
     private void buildClass(ClassBuilder cb) {
         int flags = Flags.flags(classFlags);
@@ -239,31 +266,64 @@ public class Main implements JasmParserListener {
             case "class" -> {}
             case "interface" -> flags |= ClassFile.ACC_INTERFACE;
             case "enum" -> flags |= ClassFile.ACC_ENUM;
-            case "record" -> throw new RuntimeException("records not supported");
         }
 
         if (sourceName != null)
-            cb.with(SourceFileAttribute.of(sourceName));
-        cb.withSuperclass(ClassDesc.of(superclassName.replaceAll("/", ".")));
-        cb.withFlags(flags);
-        cb.withInterfaceSymbols(superinterfaceNames.stream().map(ClassDesc::of).toList());
+            catchError(
+                () -> cb.with(SourceFileAttribute.of(sourceName)),
+                "Invalid .source: "
+            );
+
+        final String superclassName = (this.superclassName == null) ? "java/lang/Object" : this.superclassName;
+        catchError(
+            () -> cb.withSuperclass(ClassDesc.ofInternalName(superclassName)),
+            "Invalid .super: "
+        );
+
+        final int finalFlags = flags;
+        catchError(
+            () -> cb.withFlags(finalFlags),
+            "Invalid flags: "
+        );
+
+        catchError(
+            () -> cb.withInterfaceSymbols(superinterfaceNames.stream().map(ClassDesc::ofInternalName).toList()),
+            "Invalid .interface: "
+        );
 
 
         for (var field : fields) {
-            cb.withField(
-                field.fieldName(),
-                ClassDesc.ofDescriptor(field.fieldDescriptor()),
-                Flags.flags(field.flags())
+            catchError(
+                () -> cb.withField(
+                        field.fieldName(),
+                        ClassDesc.ofDescriptor(field.fieldDescriptor()),
+                        Flags.flags(field.flags())
+                ),
+                "Invalid .field: "
             );
         }
 
         for (var method : methods) {
-            cb.withMethod(
-                method.methodName(),
-                MethodTypeDesc.ofDescriptor(method.descriptor()),
-                Flags.flags(method.flags()),
-                mb -> buildMethod(method, mb)
+            catchError(
+                () -> cb.withMethod(
+                        method.methodName(),
+                        MethodTypeDesc.ofDescriptor(method.descriptor()),
+                        Flags.flags(method.flags()),
+                        mb -> buildMethod(method, mb)
+                ),
+                "Invalid .method: "
             );
+        }
+
+        if (!errors.isEmpty())
+            throw new AbortClassfileGenerationException();
+    }
+
+    private void catchError(Failable f, String messagePrefix) {
+        try {
+            f.run();
+        } catch (Exception ex) {
+            errors.add(new ErrorMessage(messagePrefix + ex.getMessage()));
         }
     }
 
@@ -278,33 +338,60 @@ public class Main implements JasmParserListener {
         for (var instr : code.instructions()) {
             try {
                 Instructions.enter(instr, cb, labels);
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (AssemblyException ex) {
+                String message = (ex.getCause() != null && ex.getCause().getMessage() != null)
+                    ? ex.getMessage() + "\n" + ex.getCause().getMessage()
+                    : ex.getMessage();
+                errors.add(new ErrorMessage(
+                    message, instr.text(),
+                    instr.line(), ErrorMessage.UNSPECIFIC
+                ));
             }
         }
     }
 
     @Override
     public void exceptionOccurred(JasmParser parser, JasmSyntaxException ex) {
-        ex.print(System.err);
-        parseErrors = true;
+        errors.add(new ErrorMessage(
+            ex.getMessage(), ex.getLine(),
+            ex.getLineNumber(), ex.getColumnNumber() + 1
+        ));
     }
 
     @Override
     public void sourceDirective(JasmParser parser, String source) {
-        this.sourceName = source;
+        if (this.sourceName != null)
+            errors.add(new ErrorMessage(
+                "Duplicate .source directive", parser.getCurrentLine(),
+                parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
+            ));
+        else
+            this.sourceName = source;
     }
 
     @Override
     public void classDirective(JasmParser parser, String classId, List<String> flags, String className) {
-        this.classId = classId;
-        this.classFlags = flags;
-        this.className = className;
+        if (this.className != null)
+            errors.add(new ErrorMessage(
+                "Duplicate .class/.interface/.enum directive", parser.getCurrentLine(),
+                parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
+            ));
+        else {
+            this.classId = classId;
+            this.classFlags = flags;
+            this.className = className;
+        }
     }
 
     @Override
     public void superDirective(JasmParser parser, String superName) {
-        this.superclassName = superName;
+        if (this.superclassName != null)
+            errors.add(new ErrorMessage(
+                "Duplicate .super directive", parser.getCurrentLine(),
+                parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
+            ));
+        else
+            this.superclassName = superName;
     }
 
     @Override
@@ -324,24 +411,44 @@ public class Main implements JasmParserListener {
 
     @Override
     public void codeDirective(JasmParser parser) {
-        this.currentMethodCodeInstructions = new ArrayList<>();
+        if (this.currentMethodCodeInstructions != null)
+            errors.add(new ErrorMessage(
+                "Duplicate .code directive", parser.getCurrentLine(),
+                parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
+            ));
+        else
+            this.currentMethodCodeInstructions = new ArrayList<>();
     }
 
     @Override
     public void codeLabel(JasmParser parser, String labelName) {
-        this.instructionLabels.add(labelName);
+        if (this.instructionLabels.contains(labelName)) {
+            errors.add(new ErrorMessage(
+                "Duplicate label definition", parser.getCurrentLine(),
+                parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
+            ));
+        } else
+            this.instructionLabels.add(labelName);
     }
 
     @Override
     public void codeInstruction(JasmParser parser, String opcode, List<Operand> operands) {
         this.currentMethodCodeInstructions.add(
-            new Instruction(new ArrayList<>(instructionLabels), opcode, operands)
+            new Instruction(new ArrayList<>(instructionLabels), opcode, operands, parser.getCurrentLine(), parser.getCurrentLineNumber())
         );
         instructionLabels.clear();
     }
 
     @Override
     public void endCodeDirective(JasmParser parser) {
-        methodCodes.put(methods.getLast(), new MethodCode(currentMethodCodeInstructions));
+        if (currentMethodCodeInstructions == null)
+            errors.add(new ErrorMessage(
+                ".end code directive not expected here", parser.getCurrentLine(),
+                parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
+            ));
+        else {
+            methodCodes.put(methods.getLast(), new MethodCode(currentMethodCodeInstructions));
+            currentMethodCodeInstructions = null;
+        }
     }
 }

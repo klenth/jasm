@@ -5,7 +5,6 @@ import edu.westminsteru.cmpt355.jasm.Operand;
 
 import java.io.BufferedReader;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -19,7 +18,8 @@ public class JasmParser {
 
     private BufferedReader in;
     private JasmParserListener listener;
-    private int lineNumber = 0;
+    private int lineNumber = 0; // line numbers start at 1? I guess?
+    private String line;
     private State state = State.Global;
     private StringBuilder stringBuilder = new StringBuilder(50);
     private boolean aborted = false;
@@ -56,9 +56,18 @@ public class JasmParser {
         this.aborted = true;
     }
 
+    public String getCurrentLine() {
+        return line;
+    }
+
+    public int getCurrentLineNumber() {
+        return lineNumber;
+    }
+
     private void process(StringView line) {
         if (aborted)
             return;
+        this.line = line.source();
         ++lineNumber;
 
         // Strip out comment
