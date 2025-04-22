@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="StringViewTest" type="JUnit" factoryName="JUnit">
+    <module name="jasm" />
+    <option name="PACKAGE_NAME" value="edu.westminsteru.cmpt355.jasm.parser" />
+    <option name="MAIN_CLASS_NAME" value="edu.westminsteru.cmpt355.jasm.parser.StringViewTest" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
