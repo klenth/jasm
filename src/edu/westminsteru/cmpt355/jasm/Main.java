@@ -18,14 +18,14 @@ public class Main implements JasmParserListener {
 
     public static void main(String... args) throws Exception {
         String inputFilename = null;
-        String outPrefix = "";
+        String outPrefix = ".";
 
         for (int i = 0; i < args.length; ++i) {
             if (args[i].equals("-h") || args[i].equals("-help") || args[i].equals("--help")) {
                 printUsage();
                 System.exit(0);
             } else if (args[i].equals("-d") && i + 1 < args.length)
-                outPrefix = args[++i] + "/";
+                outPrefix = args[++i];
             else if (inputFilename == null)
                 inputFilename = args[i];
             else {

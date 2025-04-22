@@ -1,0 +1,30 @@
+.source hello.jasm
+.class public EscapeSequences
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    dup
+    dup
+    dup
+    dup
+    dup
+    ldc "Newline: [\n]"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    ldc "Tab: [\t]"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    ldc "Backspace: [\b]"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    ldc "Double quote: [\"]"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    ldc "Single quote: [\']"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    ldc "Backslash: [\\]"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+    # the next two lines should fail if uncommented:
+    #ldc "Invalid: [\u2f3a]"
+    #ldc "Invalid: [\m]"
+
+    return
+.end code

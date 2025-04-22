@@ -367,7 +367,8 @@ public class JasmParser {
     private static Pattern LONG_PATTERN = Pattern.compile("^([0-9]+)[Ll]$");
     private static Pattern FLOAT_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+))[Ff]$");
     private static Pattern DOUBLE_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+))$");
-    private static Pattern STRING_PATTERN = Pattern.compile("^\"((.|\\\\\")*)\"$");
+    //private static Pattern STRING_PATTERN = Pattern.compile("^\"((.|\\\\\")*)\"$");
+    private static Pattern STRING_PATTERN = Pattern.compile("^\"([^\"]|\\\\\")*\"$");
     private static Pattern IDENTIFIER_PATTERN = Pattern.compile("^([a-zA-Z_0-9/\\[$<>;()-]+)$");
 
     private Operand parseOperand(StringView text) {
@@ -376,7 +377,7 @@ public class JasmParser {
         };
         List<Function<String, ? extends Operand>> ctors = List.of(
             Operand.Int::new, Operand.Long::new, Operand.Float::new, Operand.Double::new,
-            Operand.String::new, Operand.Identifier::new
+            s -> parseStringOperand(text, s), Operand.Identifier::new
         );
 
         String s = text.toString();
@@ -392,5 +393,50 @@ public class JasmParser {
         );
 
         return null;
+    }
+
+    private Operand.String parseStringOperand(StringView view, String source) {
+        // strip off " " around string
+        source = source.substring(1, source.length() - 1);
+        StringBuilder sb = new StringBuilder(source.length() * 11 / 10);
+
+        for (int i = 0; i < source.length(); ++i) {
+            int c = source.codePointAt(i);
+            if (c == '\\' && i + 1 < source.length()) {
+                char esc = switch (source.codePointAt(++i)) {
+                    case '0' -> '\0';
+                    case 'b' -> '\b';
+                    case 'f' -> '\f';
+                    case 'n' -> '\n';
+                    case 'r' -> '\r';
+                    case 't' -> '\t';
+                    case '"' -> '\"';
+                    case '\'' -> '\'';
+                    case '\\' -> '\\';
+                    case 'u' -> {
+                        fireExceptionOccurred(
+                            "Unicode escape sequences \\uXXXX not supported",
+                            lineNumber, view.start() + i,
+                            line
+                        );
+
+                        yield '\0';
+                    }
+                    default -> {
+                        fireExceptionOccurred(
+                            String.format("Invalid escape sequence: '\\%c'", source.codePointAt(i)),
+                            lineNumber, view.start() + i,
+                            line
+                        );
+
+                        yield '\0';
+                    }
+                };
+                sb.append(esc);
+            } else
+                sb.appendCodePoint(c);
+        }
+
+        return new Operand.String(sb.toString());
     }
 }

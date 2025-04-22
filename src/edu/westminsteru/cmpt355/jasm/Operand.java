@@ -36,7 +36,7 @@ public sealed interface Operand permits
 
     record String(java.lang.String text) implements Operand {
         public java.lang.String value() {
-            return text.substring(1, text.length() - 1);
+            return text;
         }
     }
 
