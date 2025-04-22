@@ -7,47 +7,15 @@ import java.lang.classfile.*;
 import java.lang.classfile.attribute.SourceFileAttribute;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.MethodTypeDesc;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 public class JasmAssembler implements JasmParserListener {
 
+    public static final String JASM_VERSION = "0.1";
+
     @FunctionalInterface
     private interface Failable {
         void run() throws Exception;
-    }
-
-    public static void main(String... args) throws Exception {
-        var listener = new JasmAssembler();
-        var parser = new JasmParser(new StringReader(CODE), listener);
-        parser.parse();
-
-        List<ErrorMessage> errors = new ArrayList<>();
-
-        if (listener.errors.isEmpty()) {
-            try {
-                byte[] data = ClassFile.of(
-                    ClassFile.ShortJumpsOption.FIX_SHORT_JUMPS
-                ).build(ClassDesc.ofInternalName(listener.className), listener::buildClass);
-
-                Files.write(Path.of("test.class"), data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            } catch (AbortClassfileGenerationException ex) {
-                // do nothing (this exception is just to escape the Classfile callbacks)
-            } catch (Exception ex) {
-                errors.add(new ErrorMessage(ex.getMessage()));
-            }
-        }
-
-        errors.addAll(listener.errors);
-
-        errors.stream()
-            .sorted(Comparator.comparing(ErrorMessage::lineNumber).thenComparing(ErrorMessage::columnNumber))
-            .forEach(em -> {
-                em.print(System.err);
-                System.err.println();
-            });
     }
 
     private BufferedReader in;
@@ -62,13 +30,26 @@ public class JasmAssembler implements JasmParserListener {
         this.in = in;
     }
 
+    public static JasmAssembler reading(Reader in) {
+        BufferedReader buffered = (in instanceof BufferedReader br) ? br : new BufferedReader(in);
+        return new JasmAssembler(buffered);
+    }
+
+    public static JasmAssembler reading(String input) {
+        return new JasmAssembler(
+            new BufferedReader(
+                new StringReader(input)
+            )
+        );
+    }
+
     public Status assemble() {
         // first phase: parsing
 
         listener = new DefaultJasmParserListener();
         parser = new JasmParser(in, listener);
         parser.parse();
-        errorMessages.addAll(listener.errors);
+        errorMessages.addAll(listener.getErrors());
         errorMessages.sort(
             Comparator.comparing(ErrorMessage::lineNumber).thenComparing(ErrorMessage::columnNumber)
         );
@@ -77,35 +58,62 @@ public class JasmAssembler implements JasmParserListener {
             return Status.Failure;
 
         // second phase: assembling
+        boolean success = true;
+        List<Bytecode> bytecodes = new ArrayList<>();
 
-        try {
-            byte[] data = ClassFile.of(
-                ClassFile.ShortJumpsOption.FIX_SHORT_JUMPS
-            ).build(ClassDesc.ofInternalName(listener.className), listener::buildClass);
+        for (var classSpec : listener.getClassSpecs()) {
+            if (classSpec.className() == null || classSpec.className().isBlank()) {
+                errorMessages.add(new ErrorMessage("Missing .class/.interface/.enum directive"));
+                success = false;
+                break;
+            }
 
-            Files.write(Path.of("test.class"), data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (AbortClassfileGenerationException ex) {
-            // do nothing (this exception is just to escape the Classfile callbacks)
-        } catch (Exception ex) {
-            errors.add(new ErrorMessage(ex.getMessage()));
+            try {
+                byte[] data = ClassFile.of(
+                    ClassFile.ShortJumpsOption.FIX_SHORT_JUMPS
+                ).build(
+                    ClassDesc.ofInternalName(classSpec.className()),
+                    classBuilder -> this.buildClass(listener, classSpec, classBuilder)
+                );
+                bytecodes.add(new Bytecode(classSpec.className(), data));
+            } catch (AbortClassfileGenerationException _) {
+                success = false;
+            } catch (Exception ex) {
+                errorMessages.add(new ErrorMessage(ex.getMessage()));
+                success = false;
+            }
         }
+
+        if (success) {
+            this.assembledBytecodes = bytecodes;
+            return Status.Success;
+        } else
+            return Status.Failure;
     }
 
-    private void buildClass(ClassBuilder cb) {
-        int flags = Flags.flags(classFlags);
-        switch (classId) {
+    public List<Bytecode> getAssembledBytecodes() {
+        return assembledBytecodes;
+    }
+
+    public List<ErrorMessage> getErrorMessages() {
+        return errorMessages;
+    }
+
+    private void buildClass(DefaultJasmParserListener listener, DefaultJasmParserListener.ClassSpec spec, ClassBuilder cb) {
+        int flags = Flags.flags(spec.classFlags());
+        switch (spec.classId()) {
             case "class" -> {}
             case "interface" -> flags |= ClassFile.ACC_INTERFACE;
             case "enum" -> flags |= ClassFile.ACC_ENUM;
         }
 
-        if (sourceName != null)
+        if (listener.getSourceName() != null)
             catchError(
-                () -> cb.with(SourceFileAttribute.of(sourceName)),
+                () -> cb.with(SourceFileAttribute.of(listener.getSourceName())),
                 "Invalid .source: "
             );
 
-        final String superclassName = (this.superclassName == null) ? "java/lang/Object" : this.superclassName;
+        final String superclassName = (spec.superclassName() == null) ? "java/lang/Object" : spec.superclassName();
         catchError(
             () -> cb.withSuperclass(ClassDesc.ofInternalName(superclassName)),
             "Invalid .super: "
@@ -118,12 +126,12 @@ public class JasmAssembler implements JasmParserListener {
         );
 
         catchError(
-            () -> cb.withInterfaceSymbols(superinterfaceNames.stream().map(ClassDesc::ofInternalName).toList()),
+            () -> cb.withInterfaceSymbols(spec.superinterfaceNames().stream().map(ClassDesc::ofInternalName).toList()),
             "Invalid .interface: "
         );
 
 
-        for (var field : fields) {
+        for (var field : spec.fields()) {
             catchError(
                 () -> cb.withField(
                         field.fieldName(),
@@ -134,19 +142,19 @@ public class JasmAssembler implements JasmParserListener {
             );
         }
 
-        for (var method : methods) {
+        for (var method : spec.methods()) {
             catchError(
                 () -> cb.withMethod(
                         method.methodName(),
                         MethodTypeDesc.ofDescriptor(method.descriptor()),
                         Flags.flags(method.flags()),
-                        mb -> buildMethod(method, mb)
+                        mb -> buildMethod(method, spec.methodCodes().get(method), mb)
                 ),
                 "Invalid .method: "
             );
         }
 
-        if (!errors.isEmpty())
+        if (!errorMessages.isEmpty())
             throw new AbortClassfileGenerationException();
     }
 
@@ -154,12 +162,11 @@ public class JasmAssembler implements JasmParserListener {
         try {
             f.run();
         } catch (Exception ex) {
-            errors.add(new ErrorMessage(messagePrefix + ex.getMessage()));
+            errorMessages.add(new ErrorMessage(messagePrefix + ex.getMessage()));
         }
     }
 
-    private void buildMethod(MethodDefinition definition, MethodBuilder mb) {
-        MethodCode code = methodCodes.getOrDefault(definition, null);
+    private void buildMethod(MethodDefinition definition, MethodCode code, MethodBuilder mb) {
         if (code != null)
             mb.withCode(cb -> buildMethodCode(code, cb));
     }
@@ -173,7 +180,7 @@ public class JasmAssembler implements JasmParserListener {
                 String message = (ex.getCause() != null && ex.getCause().getMessage() != null)
                     ? ex.getMessage() + "\n" + ex.getCause().getMessage()
                     : ex.getMessage();
-                errors.add(new ErrorMessage(
+                errorMessages.add(new ErrorMessage(
                     message, instr.text(),
                     instr.line(), ErrorMessage.UNSPECIFIC
                 ));

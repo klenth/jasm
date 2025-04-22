@@ -1,0 +1,10 @@
+.source hello.jasm
+.class public Hello
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Hello, world!"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    return
+.end code

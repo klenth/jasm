@@ -50,6 +50,7 @@ public class JasmParser {
 
     public void parse() {
         in.lines().map(StringView::of).forEach(this::process);
+        listener.endOfFile(this);
     }
 
     public void abortParsing() {

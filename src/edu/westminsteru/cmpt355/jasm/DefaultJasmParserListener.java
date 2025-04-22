@@ -4,6 +4,7 @@ import edu.westminsteru.cmpt355.jasm.parser.JasmParser;
 import edu.westminsteru.cmpt355.jasm.parser.JasmParserListener;
 import edu.westminsteru.cmpt355.jasm.parser.JasmSyntaxException;
 
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,15 +61,11 @@ class DefaultJasmParserListener implements JasmParserListener {
     @Override
     public void classDirective(JasmParser parser, String classId, List<String> flags, String className) {
         if (this.className != null)
-            errors.add(new ErrorMessage(
-                "Duplicate .class/.interface/.enum directive", parser.getCurrentLine(),
-                parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
-            ));
-        else {
-            this.classId = classId;
-            this.classFlags = flags;
-            this.className = className;
-        }
+            commitClassSpec();
+
+        this.classId = classId;
+        this.classFlags = flags;
+        this.className = className;
     }
 
     @Override
@@ -140,4 +137,39 @@ class DefaultJasmParserListener implements JasmParserListener {
         }
     }
 
+    @Override
+    public void endOfFile(JasmParser parser) {
+        commitClassSpec();
+    }
+
+    private void commitClassSpec() {
+        var spec = new ClassSpec(
+            classId,
+            className, superclassName, superinterfaceNames,
+            classFlags,
+            fields,
+            methods,
+            methodCodes
+        );
+        classSpecs.add(spec);
+
+        classId = className = superclassName = null;
+        superinterfaceNames = new ArrayList<>();
+        classFlags = new ArrayList<>();
+        fields = new ArrayList<>();
+        methods = new ArrayList<>();
+        methodCodes = new HashMap<>();
+    }
+
+    public String getSourceName() {
+        return sourceName;
+    }
+
+    public List<ErrorMessage> getErrors() {
+        return errors;
+    }
+
+    public List<ClassSpec> getClassSpecs() {
+        return classSpecs;
+    }
 }

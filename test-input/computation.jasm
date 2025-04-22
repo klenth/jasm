@@ -1,0 +1,65 @@
+.source computation.jasm
+.class public jasm/test/Computation
+
+.method public static quadraticRoot (DDD)D
+.code
+    # Compute discriminant
+    dload_2     # D →
+    dup2        # D D →
+    dmul        # D →
+    iconst_4    # D I →
+    i2d         # D D →
+    dload_0     # D D D →
+    dmul        # D D →
+    dload 4     # D D D →
+    dmul        # D D →
+    dsub        # D →
+
+    dup2        # D D →
+    dstore 6    # D →
+
+    dconst_0    # D D →
+    dcmpg       # I →
+    dup         # I I →
+    ifgt positive
+    iflt negative
+
+    # zero
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Repeated roots"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+    goto end
+
+positive:
+     pop
+     getstatic java/lang/System out Ljava/io/PrintStream;
+     dup
+     ldc "Distinct real roots: D="
+     invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+     dload 6
+     invokevirtual java/io/PrintStream println (D)V
+
+     dload 6
+     invokestatic java/lang/Math sqrt (D)D
+     dload_2
+     dadd
+     dload_0
+     iconst_2
+     i2d
+     dmul
+     ddiv
+     dreturn
+
+negative:
+     getstatic java/lang/System out Ljava/io/PrintStream;
+     dup
+     ldc "Complex conjugate roots: D="
+     invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+     dload 6
+     invokevirtual java/io/PrintStream println (D)V
+
+end:
+    dconst_0
+    dreturn
+.end code
