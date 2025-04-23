@@ -365,8 +365,8 @@ public class JasmParser {
     // Operand parsing
     private static Pattern INT_PATTERN = Pattern.compile("^([0-9]+)$");
     private static Pattern LONG_PATTERN = Pattern.compile("^([0-9]+)[Ll]$");
-    private static Pattern FLOAT_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+))[Ff]$");
-    private static Pattern DOUBLE_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+))$");
+    private static Pattern FLOAT_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+)?)[Ff]$");
+    private static Pattern DOUBLE_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+)?)$");
     private static Pattern STRING_PATTERN = Pattern.compile("^\"([^\"]|\\\\\")*\"$");
     private static Pattern CHAR_PATTERN = Pattern.compile("^'(\\\\(\\\\|.)|[^'\\\\])'$");
     private static Pattern IDENTIFIER_PATTERN = Pattern.compile("^([a-zA-Z_0-9/\\[$<>;()-]+)$");
