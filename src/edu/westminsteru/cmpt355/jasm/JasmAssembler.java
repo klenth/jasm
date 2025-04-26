@@ -186,7 +186,7 @@ public class JasmAssembler implements JasmParserListener {
                     : ex.getMessage();
                 errorMessages.add(new ErrorMessage(
                     message, instr.text(),
-                    instr.line(), ErrorMessage.UNSPECIFIC
+                    instr.line(), ex.getTarget().map(sv -> sv.start() + 1).orElse(ErrorMessage.UNSPECIFIC)
                 ));
             }
         }

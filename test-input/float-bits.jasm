@@ -1,0 +1,28 @@
+.source float-bits.jasm
+.class public FloatBits
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream; # out →
+    dup # out out →
+    dup # out out out →
+    ldc "-π ≈ " # out out out string →
+    invokevirtual java/io/PrintStream print (Ljava/lang/String;)V # out out →
+    ldc2 -4609115380302729960db # out out double →
+    invokevirtual java/io/PrintStream print (D)V # out →
+    ldc "." # out string →
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    dup
+    dup
+    ldc "The difference is "
+    invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+    ldc2 4614256656552045848db
+    ldc2 3.141592653589793
+    dsub
+    invokevirtual java/io/PrintStream print (D)V
+    ldc "."
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    return
+.end code

@@ -43,9 +43,9 @@ public record ErrorMessage(String message, String sourceLine, int lineNumber, in
             sb.append(" at line ").append(lineNumber);
         sb.append(": ").append(message).append('\n');
         if (sourceLine != null) {
-            sb.append(sourceLine).append('\n');
+            sb.append("    ").append(sourceLine).append('\n');
             if (columnNumber != UNSPECIFIC)
-                sb.append(String.format(String.format("%%%ds\n", columnNumber), "↑"));
+                sb.append(String.format(String.format("%%%ds\n", columnNumber + 4), "↑"));
         }
 
         return sb.toString();

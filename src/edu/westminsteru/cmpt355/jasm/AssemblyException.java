@@ -2,6 +2,8 @@ package edu.westminsteru.cmpt355.jasm;
 
 import edu.westminsteru.cmpt355.jasm.parser.StringView;
 
+import java.util.Optional;
+
 public class AssemblyException extends Exception {
 
     private StringView targetView = null;
@@ -29,5 +31,9 @@ public class AssemblyException extends Exception {
 
     protected AssemblyException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    public Optional<StringView> getTarget() {
+        return Optional.ofNullable(targetView);
     }
 }
