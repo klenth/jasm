@@ -138,7 +138,7 @@ public class JasmParser {
                 tail.source()
             );
         listener.sourceDirective(this,
-            filename.toString()
+            filename
         );
     }
 
@@ -147,11 +147,10 @@ public class JasmParser {
             abortParsing();
             return;
         }
-        String classId = head.substring(1).toString();
-        List<String> flags = tail.split(' ').stream()
+        StringView classId = head.substring(1);
+        List<StringView> flags = tail.split(' ').stream()
             .filter(Predicate.not(StringView::isBlank))
-            .map(Object::toString)
-            .map(String::trim)
+            .map(StringView::trim)
             .toList();
         if (flags.isEmpty())
             fireExceptionOccurred(
@@ -160,7 +159,7 @@ public class JasmParser {
                 tail.source()
             );
 
-        String className = flags.getLast();
+        StringView className = flags.getLast();
         flags = flags.subList(0, flags.size() - 1);
 
         listener.classDirective(this,
@@ -183,7 +182,7 @@ public class JasmParser {
             );
 
         listener.superDirective(this,
-            superclassName.toString()
+            superclassName
         );
     }
 
@@ -202,7 +201,7 @@ public class JasmParser {
             );
 
         listener.implementsDirective(this,
-            interfaceName.toString()
+            interfaceName
         );
     }
 
@@ -231,9 +230,9 @@ public class JasmParser {
 
         if (ok)
             listener.fieldDirective(this,
-                flags.stream().map(Object::toString).toList(),
-                fieldName.toString(),
-                descriptor.toString()
+                flags,
+                fieldName,
+                descriptor
             );
     }
 
@@ -262,9 +261,9 @@ public class JasmParser {
 
         if (ok)
             listener.methodDirective(this,
-                flags.stream().map(Object::toString).toList(),
-                methodName.toString(),
-                descriptor.toString()
+                flags,
+                methodName,
+                descriptor
             );
     }
 
@@ -287,7 +286,7 @@ public class JasmParser {
     private void processCodeLine(StringView head, StringView tail) {
         // only called by process() when in Code state
         if (head.toString().endsWith(":")) {
-            String labelName = head.substring(0, head.length() - 1).toString().trim();
+            StringView labelName = head.substring(0, head.length() - 1).trim();
             listener.codeLabel(this, labelName);
             processCodeLine(tail, StringView.of(""));
         } else if (head.toString().startsWith(".")) {
@@ -303,11 +302,8 @@ public class JasmParser {
                 head.source()
             );
         } else if (!head.isBlank()) {
-            String opcode = head.toString();
             List<StringView> operandStrings = tail.split(' ', StringView.Quoted.Ignore);
-            List<Operand> operands = operandStrings.stream().map(this::parseOperand).toList();
-            if (!operands.stream().anyMatch(Predicate.isEqual(null)))
-                listener.codeInstruction(this, opcode, operands);
+            listener.codeInstruction(this, head, operandStrings);
         }
     }
 
@@ -363,6 +359,7 @@ public class JasmParser {
     }
 
     // Operand parsing
+    /*
     private static Pattern INT_PATTERN = Pattern.compile("^([0-9]+)$");
     private static Pattern LONG_PATTERN = Pattern.compile("^([0-9]+)[Ll]$");
     private static Pattern FLOAT_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+)?)[Ff]$");
@@ -462,4 +459,6 @@ public class JasmParser {
             }
         };
     }
+
+     */
 }

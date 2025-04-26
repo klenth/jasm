@@ -1,14 +1,16 @@
 package edu.westminsteru.cmpt355.jasm;
 
+import edu.westminsteru.cmpt355.jasm.parser.JasmSyntaxException;
+import edu.westminsteru.cmpt355.jasm.parser.StringView;
+
 import java.lang.classfile.CodeBuilder;
 import java.lang.classfile.Label;
 import java.lang.classfile.TypeKind;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.MethodTypeDesc;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.regex.*;
 
 public class Instructions {
@@ -17,261 +19,313 @@ public class Instructions {
         "^[adfil](load|store)(_[0123])?$"
     );
 
-    public static void enter(Instruction instr, CodeBuilder cb, Map<String, Label> labels) throws AssemblyException {
-        // Go through all the label names on this instruction - if isn't already in the labels map, create and bind it;
-        // if it is, bind it to this instruction
-        for (var labelName : instr.labels()) {
-            switch (labels.getOrDefault(labelName, null)) {
-                case null -> labels.put(labelName, cb.newBoundLabel());
-                case Label label -> cb.labelBinding(label);
+    private static EnumMap<Opcode, Method> codeBuilderMethods = new EnumMap<>(Opcode.class);
+
+    private static final Map<String, Opcode> OPCODES;
+
+    static {
+        OPCODES = new HashMap<>();
+        for (var opcode : Opcode.values()) {
+            String name = opcode.getName();
+            if (!name.equals("ldc") && !name.equals("ldc2")) {
+                OPCODES.put(name, opcode);
             }
-        }
-
-        var isLoadStore = LOAD_STORE_PATTERN.asPredicate();
-        var operands = instr.operands();
-        switch (instr.opcode()) {
-            case String opcode when isLoadStore.test(opcode) ->
-                enterLoadStore(instr, cb);
-
-            case "anewarray", "checkcast", "instanceof" -> enterClassDesc(instr, cb);
-
-            case "getfield", "putfield", "getstatic", "putstatic" -> enterFieldDesc(instr, cb);
-
-            case "goto", "goto_w"  -> enterBranchTarget(instr, cb, labels);
-
-            // if_acmp<cond>, if_icmp<cond>, if<cond>, ifnonnull, ifnull
-            case
-                "if_acmpeq", "if_acmpne",
-                "if_icmpeq", "if_icmpne", "if_icmplt", "if_icmple", "if_icmpgt", "if_icmpge",
-                "ifeq", "ifne", "iflt", "ifle", "ifgt", "ifge",
-                "ifnonnull", "ifnull" -> enterBranchTarget(instr, cb, labels);
-
-            case "ldc", "ldc_w", "ldc2", "ldc2_w" -> enterLdc(instr, cb);
-
-            // invokedynamic: complicated, probably won't support
-            // lookupswitch/tableswitch: maybe, not yet
-            // jsr, jsr_w, ret: no longer supported as of JVMS 4.9.1
-            // wide: probably not (only needed for more than 255 locals)
-            case "invokedynamic",
-                 "lookupswitch", "tableswitch",
-                 "jsr", "jsr_w", "ret" -> throw new AssemblyException("Unsupported instruction: " + instr.opcode());
-
-            case "invokeinterface", "invokespecial", "invokestatic", "invokevirtual" -> enterMethodDesc(instr, cb);
-
-            case "multianewarray" -> {
-                testOperands(instr, Operand.Identifier.class, Operand.Int.class);
-                String className = ((Operand.Identifier)operands.getFirst()).text();
-                var classDesc = ownerClassDesc(className);
-                int dims = ((Operand.Int)operands.get(1)).value();
-                enter(instr.opcode(), new Object[] { classDesc, (Integer)dims }, cb);
-            }
-
-            case "new" -> {
-                testOperands(instr, Operand.Identifier.class);
-                String className = ((Operand.Identifier)operands.getFirst()).text();
-                var classDesc = ownerClassDesc(className);
-                enter(instr.opcode(), new Object[] { classDesc }, cb);
-            }
-
-            case "newarray" -> {
-                testOperands(instr, Operand.Identifier.class);
-                TypeKind tk = switch (((Operand.Identifier)instr.operands().getFirst()).text()) {
-                    case "boolean" -> TypeKind.BOOLEAN;
-                    case "char" -> TypeKind.CHAR;
-                    case "float" -> TypeKind.FLOAT;
-                    case "double" -> TypeKind.DOUBLE;
-                    case "byte" -> TypeKind.BYTE;
-                    case "short" -> TypeKind.SHORT;
-                    case "int" -> TypeKind.INT;
-                    case "long" -> TypeKind.LONG;
-                    default -> throw new AssemblyException(String.format("Invalid operand for opcode %s", instr.opcode()));
-                };
-
-                enter(instr.opcode(), new Object[] { tk }, cb);
-            }
-
-            default -> enter(instr.opcode(), reifyOperands(instr.operands()), cb);
         }
     }
 
-    /* for any (non-array) load/store instruction, e.g. iload_2 or dstore */
-    private static void enterLoadStore(Instruction instr, CodeBuilder cb) throws AssemblyException {
-        String opcode = instr.opcode();
-        Object[] operands = null;
-        if (opcode.charAt(opcode.length() - 2) == '_') {
-            // aload_2/istore_1/...
-            if (!instr.operands().isEmpty())
-                throw new AssemblyException(String.format("Opcode %s should have no operands", opcode));
-            int localNum = Integer.parseInt(opcode.substring(opcode.length() - 1));
-            operands = new Object[] { (Integer)localNum };
-            opcode = opcode.substring(0, opcode.length() - 2);
+    public static void enter(StringView opcode, List<StringView> operands, Map<String, Label> labels, CodeBuilder cb) throws AssemblyException {
+        String opcodeString = opcode.toString();
+        if (opcodeString.equals("ldc")) {
+            enterLdc(opcode, operands, cb);
+            return;
+        } else if (opcodeString.equals("ldc2")) {
+            enterLdc2(opcode, operands, cb);
+            return;
+        }
+
+        Opcode opc = OPCODES.getOrDefault(opcodeString, null);
+        if (opc == null)
+            throw new AssemblyException(
+                "Invalid opcode", opcode
+            );
+
+        var opcOperands = opc.getOperandTypes();
+        if (opcOperands.length == 0 && !operands.isEmpty())
+            throw new AssemblyException(
+                "Opcode " + opc + " takes no operands",
+                operands.getFirst()
+            );
+        else if (operands.size() != opcOperands.length)
+            throw new AssemblyException(String.format(
+                    "Opcode " + opc + " takes %s",
+                    opcOperands.length == 1
+                        ? "one operand" : opcOperands.length == 2
+                        ? "two operands" : opcOperands.length == 3
+                        ? "three operands" : opcOperands.length + " operands"
+            ), opcode);
+
+        var ops = parseOperands(operands, opcOperands, labels);
+        switch (opc) {
+            // opcodes without arguments whose enum names match method names in CodeBuilder
+            case aaload, aastore, areturn, arraylength, athrow,
+                 baload, bastore,
+                 caload, castore, checkcast,
+                 d2f, d2i, d2l, dadd, daload, dastore, dcmpg, dcmpl,
+                 dconst_0, dconst_1, ddiv, dmul, dneg, drem, dreturn, dsub,
+                 dup, dup_x1, dup_x2, dup2, dup2_x1, dup2_x2,
+                 f2d, f2i, f2l, fadd, faload, fastore, fcmpg, fcmpl,
+                 fconst_0, fconst_1, fconst_2, fdiv, fmul, fneg, frem, freturn, fsub,
+                 i2b, i2c, i2d, i2f, i2l, i2s, iadd, iaload, iand, iastore,
+                 iconst_0, iconst_1, iconst_2, iconst_3, iconst_4, iconst_5, iconst_m1,
+                 idiv, imul, ineg, ior, irem, ireturn, ishl,
+                 ishr, isub, iushr, ixor,
+                 l2d, l2f, l2i, ladd, laload, land, lastore, lcmp, lconst_0, lconst_1,
+                 ldiv, lmul, lneg, lor, lrem, lreturn, lshl, lshr, lsub, lushr, lxor,
+                 monitorenter, monitorexit,
+                 nop,
+                 pop, pop2,
+                 return_,
+                 saload, sastore, swap -> {
+                try {
+                    Method method;
+                    if (codeBuilderMethods.containsKey(opc))
+                        method = codeBuilderMethods.get(opc);
+                    else {
+                        method = CodeBuilder.class.getMethod(opc.name());
+                        codeBuilderMethods.put(opc, method);
+                    }
+                    method.invoke(cb);
+                } catch (ReflectiveOperationException ex) {
+                    throw new AssemblyException("Internal assembler error (please report)", ex);
+                }
+            }
+
+            // loads and stores
+            case aload -> cb.aload(_int(ops[0]));
+            case aload_0 -> cb.aload(0);
+            case aload_1 -> cb.aload(1);
+            case aload_2 -> cb.aload(2);
+            case aload_3 -> cb.aload(3);
+            case astore -> cb.astore(_int(ops[0]));
+            case astore_0 -> cb.astore(0);
+            case astore_1 -> cb.astore(1);
+            case astore_2 -> cb.astore(2);
+            case astore_3 -> cb.astore(3);
+
+            case dload -> cb.dload(_int(ops[0]));
+            case dload_0 -> cb.dload(0);
+            case dload_1 -> cb.dload(1);
+            case dload_2 -> cb.dload(2);
+            case dload_3 -> cb.dload(3);
+            case dstore -> cb.dstore(_int(ops[0]));
+            case dstore_0 -> cb.dstore(0);
+            case dstore_1 -> cb.dstore(1);
+            case dstore_2 -> cb.dstore(2);
+            case dstore_3 -> cb.dstore(3);
+
+            case fload -> cb.fload(_int(ops[0]));
+            case fload_0 -> cb.fload(0);
+            case fload_1 -> cb.fload(1);
+            case fload_2 -> cb.fload(2);
+            case fload_3 -> cb.fload(3);
+            case fstore -> cb.fstore(_int(ops[0]));
+            case fstore_0 -> cb.fstore(0);
+            case fstore_1 -> cb.fstore(1);
+            case fstore_2 -> cb.fstore(2);
+            case fstore_3 -> cb.fstore(3);
+
+            case iload -> cb.iload(_int(ops[0]));
+            case iload_0 -> cb.iload(0);
+            case iload_1 -> cb.iload(1);
+            case iload_2 -> cb.iload(2);
+            case iload_3 -> cb.iload(3);
+            case istore -> cb.istore(_int(ops[0]));
+            case istore_0 -> cb.istore(0);
+            case istore_1 -> cb.istore(1);
+            case istore_2 -> cb.istore(2);
+            case istore_3 -> cb.istore(3);
+
+            case lload -> cb.lload(_int(ops[0]));
+            case lload_0 -> cb.lload(0);
+            case lload_1 -> cb.lload(1);
+            case lload_2 -> cb.lload(2);
+            case lload_3 -> cb.lload(3);
+            case lstore -> cb.lstore(_int(ops[0]));
+            case lstore_0 -> cb.lstore(0);
+            case lstore_1 -> cb.lstore(1);
+            case lstore_2 -> cb.lstore(2);
+            case lstore_3 -> cb.lstore(3);
+
+
+            // fields and methods
+            case getfield -> cb.getfield(
+                _classDesc(ops[0]),
+                _id(ops[1]),
+                _typeDesc(ops[2])
+            );
+            case getstatic -> cb.getstatic(
+                _classDesc(ops[0]),
+                _id(ops[1]),
+                _typeDesc(ops[2])
+            );
+            case putfield -> cb.putfield(
+                _classDesc(ops[0]),
+                _id(ops[1]),
+                _typeDesc(ops[2])
+            );
+            case putstatic -> cb.putstatic(
+                _classDesc(ops[0]),
+                _id(ops[1]),
+                _typeDesc(ops[2])
+            );
+            case invokeinterface -> cb.invokeinterface(
+                _classDesc(ops[0]),
+                _id(ops[1]),
+                _methodDesc(ops[2])
+            );
+            case invokespecial -> cb.invokespecial(
+                _classDesc(ops[0]),
+                _id(ops[1]),
+                _methodDesc(ops[2])
+            );
+            case invokestatic -> cb.invokestatic(
+                _classDesc(ops[0]),
+                _id(ops[1]),
+                _methodDesc(ops[2])
+            );
+            case invokevirtual -> cb.invokevirtual(
+                _classDesc(ops[0]),
+                _id(ops[1]),
+                _methodDesc(ops[2])
+            );
+
+            // branches
+            case goto_,
+                 if_acmpeq, if_acmpne,
+                 if_icmpeq, if_icmpne, if_icmplt, if_icmpge, if_icmpgt, if_icmple,
+                 ifeq, ifne, iflt, ifge, ifgt, ifle,
+                 ifnonnull, ifnull -> {
+                var target = labels.computeIfAbsent(
+                    ((Operand.BranchTarget)ops[0]).text(),
+                    l -> cb.newLabel()
+                );
+
+                try {
+                    Method method;
+
+                    if (codeBuilderMethods.containsKey(opc))
+                        method = codeBuilderMethods.get(opc);
+                    else {
+                        method = CodeBuilder.class.getMethod(opc.name(), Label.class);
+                        codeBuilderMethods.put(opc, method);
+                    }
+
+                    method.invoke(cb, target);
+                } catch (ReflectiveOperationException ex) {
+                    throw new AssemblyException("Internal error (please report)", ex);
+                }
+            }
+
+            // miscellaneous
+            case anewarray -> cb.anewarray(_classDesc(ops[0]));
+            case bipush -> cb.bipush(_int(ops[0]));
+            case instanceOf -> cb.instanceOf(_classDesc(ops[0]));
+            case multianewarray -> cb.multianewarray(_classDesc(ops[0]), _int(ops[1]));
+            case new_ -> cb.new_(_classDesc(ops[0]));
+            case newarray -> cb.newarray(_typeKind(ops[0]));
+            case sipush -> cb.sipush(_int(ops[0]));
+
+            default ->
+                throw new AssemblyException("Internal error (please report): unhandled opcode " + opc);
+        }
+   }
+
+    private static int _int(Operand op) {
+        return ((Operand.Int)op).value();
+    }
+
+    private static ClassDesc _classDesc(Operand op) {
+        return ClassDesc.ofInternalName(((Operand.ClassName)op).value());
+    }
+
+    private static String _id(Operand op) {
+        return ((Operand.Identifier)op).value();
+    }
+
+    private static ClassDesc _typeDesc(Operand op) {
+        return ClassDesc.ofDescriptor(((Operand.Descriptor)op).text());
+    }
+
+    private static MethodTypeDesc _methodDesc(Operand op) {
+        return MethodTypeDesc.ofDescriptor(((Operand.MethodDescriptor)op).text());
+    }
+
+    private static TypeKind _typeKind(Operand op) {
+        return switch ((Operand.ArrayType)op) {
+            case Byte -> TypeKind.BYTE;
+            case Short -> TypeKind.SHORT;
+            case Int -> TypeKind.INT;
+            case Long -> TypeKind.LONG;
+            case Float -> TypeKind.FLOAT;
+            case Double -> TypeKind.DOUBLE;
+            case Char -> TypeKind.CHAR;
+            case Boolean -> TypeKind.BOOLEAN;
+        };
+    }
+
+    private static void enterLdc(StringView opcode, List<StringView> operands, CodeBuilder cb) throws AssemblyException {
+        // Possible operands:
+        //   int value
+        //   float value
+        //   String value
+        //   class/method type/method handle reference (unimplemented)
+        if (operands.size() != 1)
+            throw new AssemblyException("Opcode ldc takes one operand", opcode);
+        StringView op = operands.getFirst();
+        String ops = op.toString();
+        if (ops.toLowerCase().endsWith("f") || ops.toLowerCase().endsWith("fb")) {
+            var fop = Operands.parseFloat(op);
+            cb.ldc(fop.value());
+        } else if (ops.startsWith("\"")) {
+            var sop = Operands.parseString(op);
+            cb.ldc(sop.value());
         } else {
-            if (instr.operands().size() != 1)
-                throw new AssemblyException(String.format("Opcode %s takes one operand", opcode));
-            if (instr.operands().getFirst() instanceof Operand.Int oint)
-                operands = new Object[] { (Integer) oint.value() };
-            else
-                throw new AssemblyException(String.format("Operand to opcode %s must be integer", opcode));
-        }
-
-        enter(opcode, operands, cb);
-    }
-
-    /* for any instruction taking a single class descriptor as operand, e.g. anewarray, checkcast */
-    private static void enterClassDesc(Instruction instr, CodeBuilder cb) throws AssemblyException {
-        testOperands(instr, Operand.Identifier.class);
-        var id = (Operand.Identifier)instr.operands().getFirst();
-        enter(instr.opcode(), new Object[] { ClassDesc.ofDescriptor(id.text()) }, cb);
-    }
-
-    /* for any instruction naming a field (e.g. getfield, putstatic) */
-    private static void enterFieldDesc(Instruction instr, CodeBuilder cb) throws AssemblyException {
-        var operands = instr.operands();
-        testOperands(instr, Operand.Identifier.class, Operand.Identifier.class, Operand.Identifier.class);
-        String owner = ((Operand.Identifier)operands.getFirst()).text();
-        String name = ((Operand.Identifier)operands.get(1)).text();
-        String desc = ((Operand.Identifier)operands.get(2)).text();
-        enter(instr.opcode(), new Object[] {
-            ownerClassDesc(owner), name, ClassDesc.ofDescriptor(desc)
-        }, cb);
-    }
-
-    /* for any instruction taking a branch target as operand */
-    private static void enterBranchTarget(Instruction instr, CodeBuilder cb, Map<String, Label> labels) throws AssemblyException {
-        var operands = instr.operands();
-        testOperands(instr, Operand.Identifier.class);
-        String labelName = ((Operand.Identifier)operands.getFirst()).text();
-
-        // Create a label for this if necessary
-        // (If it doesn't exist, it will eventually be bound when we find the instruction with that label)
-        Label label = labels.computeIfAbsent(labelName, _ -> cb.newLabel());
-
-        enter(instr.opcode(), new Object[] { label }, cb);
-    }
-
-    /* for any instruction taking a method descriptor as operand */
-    private static void enterMethodDesc(Instruction instr, CodeBuilder cb) throws AssemblyException {
-        var operands = instr.operands();
-        testOperands(instr, Operand.Identifier.class, Operand.Identifier.class, Operand.Identifier.class);
-        String owner = ((Operand.Identifier)operands.getFirst()).text();
-        String name = ((Operand.Identifier)operands.get(1)).text();
-        String desc = ((Operand.Identifier)operands.get(2)).text();
-        enter(instr.opcode(), new Object[] {
-            ownerClassDesc(owner), name, MethodTypeDesc.ofDescriptor(desc)
-        }, cb);
-    }
-
-    /* for ldc and ldc2 */
-    private static void enterLdc(Instruction instr, CodeBuilder cb) throws AssemblyException {
-        // ldc: int, float, string, class reference (ID), method reference (ID ID ID), method handle (unsupported)
-        // ldc2: long or double
-
-        if (instr.opcode().equals("ldc") || instr.opcode().equals("ldc_w")) {
-            if (instr.operands().size() == 1) {
-                switch (instr.operands().getFirst()) {
-                    case Operand.Int i -> cb.ldc((Integer)i.value());
-                    case Operand.Float f -> cb.ldc((Float)f.value());
-                    case Operand.String s -> cb.ldc(s.value());
-                    case Operand.Identifier id -> cb.ldc(ClassDesc.of(id.text()));
-                    default -> throw new AssemblyException("Invalid operand for opcode ldc");
-                }
-            } else if (instr.operands().size() == 3)
-                throw new AssemblyException("Unsupported opcode: ldc [method]");
-            else
-                throw new AssemblyException("Opcode ldc takes either 1 or 3 operands, not " + instr.operands().size());
-        } else if (instr.opcode().equals("ldc2") || instr.opcode().equals("ldc2_w")) {
-            if (instr.operands().size() == 1) {
-                switch (instr.operands().getFirst()) {
-                    case Operand.Long l -> cb.ldc((Long)l.value());
-                    case Operand.Double d -> cb.ldc((Double)d.value());
-                    default -> throw new AssemblyException("Invalid operand for opcode ldc2");
-                }
-            } else
-                throw new AssemblyException("Opcode ldc2 takes exactly 1 operand");
-        }
-    }
-
-    private static Object[] reifyOperands(List<Operand> operands) {
-        Object[] rops = new Object[operands.size()];
-        for (int i = 0; i < operands.size(); ++i) {
-            rops[i] = switch (operands.get(i)) {
-                case Operand.Int o -> (Integer)o.value();
-                case Operand.Long o -> (Long)o.value();
-                case Operand.Double o -> (Double)o.value();
-                case Operand.Float o -> (Float)o.value();
-                case Operand.String o -> o.text();
-                // what an identifier is varies on the instruction (branch target, descriptor, etc.)
-                case Operand.Identifier o -> throw new RuntimeException("Internal error (please report): reifyOperands() given an identifier");
-            };
-        }
-        return rops;
-    }
-
-    private static void enter(String opcode, Object[] operands, CodeBuilder cb) throws AssemblyException {
-        Class<?>[] paramTypes = Arrays.stream(operands).map(Instructions::operandType).toArray(i -> new Class<?>[i]);
-        // Some opcodes have renamed methods due to clashes with Java keywords
-        String methodName = switch (opcode) {
-            case "goto" -> "goto_";
-            case "instanceof" -> "instanceOf";
-            case "new" -> "new_";
-            case "return" -> "return_";
-            default -> opcode;
-        };
-
-        try {
-            var method = CodeBuilder.class.getMethod(methodName, paramTypes);
-            method.invoke(cb, operands);
-        } catch (NoSuchMethodException ex) {
-            boolean methodExists = false;
-            for (var method : CodeBuilder.class.getMethods()) {
-                if (method.getName().equals(methodName)) {
-                    methodExists = true;
-                    break;
-                }
+            try {
+                var iop = Operands.parseInt(op);
+                cb.ldc(iop.value());
+            } catch (AssemblyException _) {
+                throw new AssemblyException("Invalid operand", op);
             }
-
-            if (!methodExists)
-                throw new AssemblyException("Invalid opcode: " + opcode);
-            else
-                throw new AssemblyException("Invalid operands for opcode " + opcode);
-        } catch (InvocationTargetException ex) {
-            throw new AssemblyException("Illegal operand value for opcode " + opcode, ex);
-        } catch (ReflectiveOperationException ex) {
-            throw new AssemblyException("Reflection error while generating bytecode", ex);
         }
     }
 
-    private static Class<?> operandType(Object operand) {
-        return switch (operand) {
-            case Byte _ -> Byte.TYPE;
-            case Short _ -> Short.TYPE;
-            case Integer _ -> Integer.TYPE;
-            case Long _ -> Long.TYPE;
-            case Float _ -> Float.TYPE;
-            case Double _ -> Double.TYPE;
-            case Character _ -> Character.TYPE;
-            case Boolean _ -> Boolean.TYPE;
-            case String _ -> String.class;
-            case Label _ -> Label.class;
-            case ClassDesc _ -> ClassDesc.class;
-            case MethodTypeDesc _ -> MethodTypeDesc.class;
-            default -> throw new RuntimeException("Internal error (please report): Unexpected operand: " + operand);
-        };
+    private static void enterLdc2(StringView opcode, List<StringView> operands, CodeBuilder cb) throws AssemblyException {
+        // Possible operands:
+        //   long value
+        //   double value
+        if (operands.size() != 1)
+            throw new AssemblyException("Opcode ldc2 takes one operand", opcode);
+        StringView op = operands.getFirst();
+        String ops = op.toString();
+        if (ops.toLowerCase().endsWith("db") || ops.contains(".") || ops.toLowerCase().contains("e")) {
+            var dop = Operands.parseDouble(op);
+            cb.ldc(dop.value());
+        } else {
+            try {
+                var lop = Operands.parseLong(op);
+                cb.ldc(lop.value());
+            } catch (AssemblyException _) {
+                throw new AssemblyException("Invalid operand", op);
+            }
+        }
     }
 
-    private static void testOperands(Instruction instr, Class<?>... expectedTypes) throws AssemblyException {
-        if (instr.operands().size() != expectedTypes.length)
-            throw new AssemblyException(String.format("Opcode %s takes exactly %s operand%s",
-                instr.opcode(),
-                expectedTypes.length == 1 ? "one" : "" + expectedTypes.length,
-                expectedTypes.length == 1 ? "" : "s"
-            ));
-        for (int i = 0; i < expectedTypes.length; ++i)
-            if (!(instr.operands().get(i).getClass().equals(expectedTypes[i])))
-                throw new AssemblyException(String.format("Wrong types for operands for opcode %s", instr.opcode()));
-    }
+    private static Operand[] parseOperands(List<StringView> operands, OperandType[] opTypes, Map<String, Label> labels) throws AssemblyException {
+        Operand[] ops = new Operand[opTypes.length];
 
-    private static ClassDesc ownerClassDesc(String owner) {
-        return ClassDesc.of(owner.replaceAll("/", "."));
+        for (int i = 0; i < ops.length; ++i)
+            ops[i] = Operands.parseOperand(operands.get(i), opTypes[i]);
+
+        return ops;
     }
 }

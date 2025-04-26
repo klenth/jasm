@@ -1,8 +1,18 @@
 package edu.westminsteru.cmpt355.jasm;
 
+import edu.westminsteru.cmpt355.jasm.parser.StringView;
+
 public class AssemblyException extends Exception {
+
+    private StringView targetView = null;
+
     public AssemblyException(String message) {
         super(message);
+    }
+
+    public AssemblyException(String message, StringView targetView) {
+        this(message);
+        this.targetView = targetView;
     }
 
     public AssemblyException() {

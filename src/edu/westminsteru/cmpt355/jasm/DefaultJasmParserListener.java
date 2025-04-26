@@ -3,6 +3,7 @@ package edu.westminsteru.cmpt355.jasm;
 import edu.westminsteru.cmpt355.jasm.parser.JasmParser;
 import edu.westminsteru.cmpt355.jasm.parser.JasmParserListener;
 import edu.westminsteru.cmpt355.jasm.parser.JasmSyntaxException;
+import edu.westminsteru.cmpt355.jasm.parser.StringView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,31 +13,31 @@ import java.util.Map;
 class DefaultJasmParserListener implements JasmParserListener {
 
     record ClassSpec(
-        String classId,
-        String className, String superclassName, List<String> superinterfaceNames,
-        List<String> classFlags,
+        StringView classId,
+        StringView className, StringView superclassName, List<StringView> superinterfaceNames,
+        List<StringView> classFlags,
         List<FieldDefinition> fields,
         List<MethodDefinition> methods,
         Map<MethodDefinition, MethodCode> methodCodes
     ) {}
 
     // global stuff
-    private String sourceName;
+    private StringView sourceName;
     private List<ErrorMessage> errors = new ArrayList<>();
     private List<ClassSpec> classSpecs = new ArrayList<>();
 
     // per-class stuff
-    private String classId;
-    private String className, superclassName;
-    private List<String> classFlags;
-    private List<String> superinterfaceNames = new ArrayList<>();
+    private StringView classId;
+    private StringView className, superclassName;
+    private List<StringView> classFlags;
+    private List<StringView> superinterfaceNames = new ArrayList<>();
     private List<FieldDefinition> fields = new ArrayList<>();
     private List<MethodDefinition> methods = new ArrayList<>();
     private Map<MethodDefinition, MethodCode> methodCodes = new HashMap<>();
 
     // per-method stuff
     private List<Instruction> currentMethodCodeInstructions = null;
-    private List<String> instructionLabels = new ArrayList<>();
+    private List<StringView> instructionLabels = new ArrayList<>();
 
     @Override
     public void exceptionOccurred(JasmParser parser, JasmSyntaxException ex) {
@@ -47,7 +48,7 @@ class DefaultJasmParserListener implements JasmParserListener {
     }
 
     @Override
-    public void sourceDirective(JasmParser parser, String source) {
+    public void sourceDirective(JasmParser parser, StringView source) {
         if (this.sourceName != null)
             errors.add(new ErrorMessage(
                 "Duplicate .source directive", parser.getCurrentLine(),
@@ -58,7 +59,7 @@ class DefaultJasmParserListener implements JasmParserListener {
     }
 
     @Override
-    public void classDirective(JasmParser parser, String classId, List<String> flags, String className) {
+    public void classDirective(JasmParser parser, StringView classId, List<StringView> flags, StringView className) {
         if (this.className != null)
             commitClassSpec();
 
@@ -68,7 +69,7 @@ class DefaultJasmParserListener implements JasmParserListener {
     }
 
     @Override
-    public void superDirective(JasmParser parser, String superName) {
+    public void superDirective(JasmParser parser, StringView superName) {
         if (this.superclassName != null)
             errors.add(new ErrorMessage(
                 "Duplicate .super directive", parser.getCurrentLine(),
@@ -79,17 +80,17 @@ class DefaultJasmParserListener implements JasmParserListener {
     }
 
     @Override
-    public void implementsDirective(JasmParser parser, String interfaceName) {
+    public void implementsDirective(JasmParser parser, StringView interfaceName) {
         this.superinterfaceNames.add(interfaceName);
     }
 
     @Override
-    public void fieldDirective(JasmParser parser, List<String> flags, String name, String descriptor) {
+    public void fieldDirective(JasmParser parser, List<StringView> flags, StringView name, StringView descriptor) {
         this.fields.add(new FieldDefinition(flags, name, descriptor));
     }
 
     @Override
-    public void methodDirective(JasmParser parser, List<String> flags, String name, String descriptor) {
+    public void methodDirective(JasmParser parser, List<StringView> flags, StringView name, StringView descriptor) {
         this.methods.add(new MethodDefinition(flags, name, descriptor));
     }
 
@@ -105,7 +106,7 @@ class DefaultJasmParserListener implements JasmParserListener {
     }
 
     @Override
-    public void codeLabel(JasmParser parser, String labelName) {
+    public void codeLabel(JasmParser parser, StringView labelName) {
         if (this.instructionLabels.contains(labelName)) {
             errors.add(new ErrorMessage(
                 "Duplicate label definition", parser.getCurrentLine(),
@@ -116,7 +117,7 @@ class DefaultJasmParserListener implements JasmParserListener {
     }
 
     @Override
-    public void codeInstruction(JasmParser parser, String opcode, List<Operand> operands) {
+    public void codeInstruction(JasmParser parser, StringView opcode, List<StringView> operands) {
         this.currentMethodCodeInstructions.add(
             new Instruction(new ArrayList<>(instructionLabels), opcode, operands, parser.getCurrentLine(), parser.getCurrentLineNumber())
         );
@@ -160,7 +161,7 @@ class DefaultJasmParserListener implements JasmParserListener {
         methodCodes = new HashMap<>();
     }
 
-    public String getSourceName() {
+    public StringView getSourceName() {
         return sourceName;
     }
 

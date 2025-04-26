@@ -20,11 +20,10 @@ public enum Opcode {
     astore_1(),
     astore_2(),
     astore_3(),
-    astore_4(),
     athrow(),
     baload(),
     bastore(),
-    bipush(),
+    bipush(Int),
     caload(),
     castore(),
     checkcast(),
@@ -213,12 +212,20 @@ public enum Opcode {
     private OperandType[] operands;
 
     Opcode(String name, OperandType... operands) {
-        this.name = super.name();
+        this.name = name;
         this.operands = operands;
     }
     
     Opcode(OperandType... operands) {
         this.name = super.name();
         this.operands = operands;
+    }
+
+    public java.lang.String getName() {
+        return name;
+    }
+
+    public OperandType[] getOperandTypes() {
+        return operands;
     }
 }

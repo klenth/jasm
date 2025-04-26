@@ -11,7 +11,7 @@ import java.util.*;
 
 public class JasmAssembler implements JasmParserListener {
 
-    public static final String JASM_VERSION = "0.1";
+    public static final String JASM_VERSION = "0.2";
 
     @FunctionalInterface
     private interface Failable {
@@ -72,10 +72,10 @@ public class JasmAssembler implements JasmParserListener {
                 byte[] data = ClassFile.of(
                     ClassFile.ShortJumpsOption.FIX_SHORT_JUMPS
                 ).build(
-                    ClassDesc.ofInternalName(classSpec.className()),
+                    ClassDesc.ofInternalName(classSpec.className().toString()),
                     classBuilder -> this.buildClass(listener, classSpec, classBuilder)
                 );
-                bytecodes.add(new Bytecode(classSpec.className(), data));
+                bytecodes.add(new Bytecode(classSpec.className().toString(), data));
             } catch (AbortClassfileGenerationException _) {
                 success = false;
             } catch (Exception ex) {
@@ -100,8 +100,8 @@ public class JasmAssembler implements JasmParserListener {
     }
 
     private void buildClass(DefaultJasmParserListener listener, DefaultJasmParserListener.ClassSpec spec, ClassBuilder cb) {
-        int flags = Flags.flags(spec.classFlags());
-        switch (spec.classId()) {
+        int flags = Flags.flags(spec.classFlags().stream().map(StringView::toString).toList());
+        switch (spec.classId().toString()) {
             case "class" -> {}
             case "interface" -> flags |= ClassFile.ACC_INTERFACE;
             case "enum" -> flags |= ClassFile.ACC_ENUM;
@@ -109,11 +109,11 @@ public class JasmAssembler implements JasmParserListener {
 
         if (listener.getSourceName() != null)
             catchError(
-                () -> cb.with(SourceFileAttribute.of(listener.getSourceName())),
+                () -> cb.with(SourceFileAttribute.of(listener.getSourceName().toString())),
                 "Invalid .source: "
             );
 
-        final String superclassName = (spec.superclassName() == null) ? "java/lang/Object" : spec.superclassName();
+        final String superclassName = (spec.superclassName() == null) ? "java/lang/Object" : spec.superclassName().toString();
         catchError(
             () -> cb.withSuperclass(ClassDesc.ofInternalName(superclassName)),
             "Invalid .super: "
@@ -126,7 +126,11 @@ public class JasmAssembler implements JasmParserListener {
         );
 
         catchError(
-            () -> cb.withInterfaceSymbols(spec.superinterfaceNames().stream().map(ClassDesc::ofInternalName).toList()),
+            () -> cb.withInterfaceSymbols(spec.superinterfaceNames().stream()
+                .map(StringView::toString)
+                .map(ClassDesc::ofInternalName)
+                .toList()
+            ),
             "Invalid .interface: "
         );
 
@@ -134,9 +138,9 @@ public class JasmAssembler implements JasmParserListener {
         for (var field : spec.fields()) {
             catchError(
                 () -> cb.withField(
-                        field.fieldName(),
-                        ClassDesc.ofDescriptor(field.fieldDescriptor()),
-                        Flags.flags(field.flags())
+                        field.fieldName().toString(),
+                        ClassDesc.ofDescriptor(field.fieldDescriptor().toString()),
+                        Flags.flags(field.flags().stream().map(StringView::toString).toList())
                 ),
                 "Invalid .field: "
             );
@@ -145,9 +149,9 @@ public class JasmAssembler implements JasmParserListener {
         for (var method : spec.methods()) {
             catchError(
                 () -> cb.withMethod(
-                        method.methodName(),
-                        MethodTypeDesc.ofDescriptor(method.descriptor()),
-                        Flags.flags(method.flags()),
+                        method.methodName().toString(),
+                        MethodTypeDesc.ofDescriptor(method.descriptor().toString()),
+                        Flags.flags(method.flags().stream().map(StringView::toString).toList()),
                         mb -> buildMethod(method, spec.methodCodes().get(method), mb)
                 ),
                 "Invalid .method: "
@@ -175,7 +179,7 @@ public class JasmAssembler implements JasmParserListener {
         Map<String, Label> labels = new HashMap<>();
         for (var instr : code.instructions()) {
             try {
-                Instructions.enter(instr, cb, labels);
+                Instructions.enter(instr.opcode(), instr.operands(), labels, cb);
             } catch (AssemblyException ex) {
                 String message = (ex.getCause() != null && ex.getCause().getMessage() != null)
                     ? ex.getMessage() + "\n" + ex.getCause().getMessage()
