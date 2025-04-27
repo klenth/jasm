@@ -227,10 +227,24 @@ public class Instructions {
             }
 
             // miscellaneous
-            case anewarray -> cb.anewarray(_classDesc(ops[0]));
+            case anewarray -> {
+                var desc = _typeDesc(ops[0]);
+                if (desc.isPrimitive())
+                    throw new AssemblyException("Invalid operand", operands.getFirst());
+                cb.anewarray(desc);
+            }
+
             case bipush -> cb.bipush(_int(ops[0]));
+            case iinc -> cb.iinc(_int(ops[0]), _int(ops[1]));
             case instanceOf -> cb.instanceOf(_classDesc(ops[0]));
-            case multianewarray -> cb.multianewarray(_classDesc(ops[0]), _int(ops[1]));
+
+            case multianewarray -> {
+                var desc = _typeDesc(ops[0]);
+                if (!desc.isArray())
+                    throw new AssemblyException("Invalid operand", operands.getFirst());
+                cb.multianewarray(desc, _int(ops[1]));
+            }
+
             case new_ -> cb.new_(_classDesc(ops[0]));
             case newarray -> cb.newarray(_typeKind(ops[0]));
             case sipush -> cb.sipush(_int(ops[0]));

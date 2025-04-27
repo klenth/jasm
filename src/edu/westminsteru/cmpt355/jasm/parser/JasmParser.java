@@ -349,7 +349,7 @@ public class JasmParser {
     private boolean checkGlobalState(StringView head) {
         if (state != State.Global) {
             fireExceptionOccurred(
-                head.toString() + " unexpected here",
+                head.toString() + " unexpected here (missing .end code?)",
                 lineNumber, head.start(),
                 head.source()
             );

@@ -1,28 +1,59 @@
 .source float-bits.jasm
 .class public FloatBits
 
-.method public static main ([Ljava/lang/String;)V
+.method private static printDouble (Ljava/lang/String;D)V
 .code
-    getstatic java/lang/System out Ljava/io/PrintStream; # out →
-    dup # out out →
-    dup # out out out →
-    ldc "-π ≈ " # out out out string →
-    invokevirtual java/io/PrintStream print (Ljava/lang/String;)V # out out →
-    ldc2 -4609115380302729960db # out out double →
-    invokevirtual java/io/PrintStream print (D)V # out →
-    ldc "." # out string →
-    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
-
     getstatic java/lang/System out Ljava/io/PrintStream;
     dup
     dup
-    ldc "The difference is "
+    aload_0
     invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+    dload_1
+    invokevirtual java/io/PrintStream print (D)V
+    invokevirtual java/io/PrintStream println ()V
+    return
+.end code
+
+.method private static printFloat (Ljava/lang/String;F)V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    dup
+    dup
+    aload_0
+    invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+    fload_1
+    invokevirtual java/io/PrintStream print (F)V
+    invokevirtual java/io/PrintStream println ()V
+    return
+.end code
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    ldc "-π ≈ " # out out out string →
+    ldc2 -4609115380302729960db # out out double →
+    invokestatic FloatBits printDouble (Ljava/lang/String;D)V
+
+    ldc "The difference is "
     ldc2 4614256656552045848db
     ldc2 3.141592653589793
     dsub
-    invokevirtual java/io/PrintStream print (D)V
-    ldc "."
-    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    invokestatic FloatBits printDouble (Ljava/lang/String;D)V
+
+    ldc "A googol is about "
+    ldc2 1e100
+    invokestatic FloatBits printDouble (Ljava/lang/String;D)V
+
+    ldc "Its reciprocal is about "
+    ldc2 +1E-100
+    invokestatic FloatBits printDouble (Ljava/lang/String;D)V
+
+    ldc "As a float, their square roots are "
+    ldc 1e50f
+    invokestatic FloatBits printFloat (Ljava/lang/String;F)V
+
+    ldc "and "
+    ldc 1e-50f
+    invokestatic FloatBits printFloat (Ljava/lang/String;F)V
+
     return
 .end code

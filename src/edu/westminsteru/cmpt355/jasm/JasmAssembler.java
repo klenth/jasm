@@ -178,6 +178,9 @@ public class JasmAssembler implements JasmParserListener {
     private void buildMethodCode(MethodCode code, CodeBuilder cb) {
         Map<String, Label> labels = new HashMap<>();
         for (var instr : code.instructions()) {
+            instr.labels().forEach(l ->
+                cb.labelBinding(labels.computeIfAbsent(l.toString(), _ -> cb.newLabel()))
+            );
             try {
                 Instructions.enter(instr.opcode(), instr.operands(), labels, cb);
             } catch (AssemblyException ex) {

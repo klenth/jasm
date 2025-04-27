@@ -1,0 +1,104 @@
+.source arrays.jasm
+.class public Arrays
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    # 0: args
+    # 1: array
+    # 2: i
+    # 3: sum
+    bipush 100
+    # 100 →
+    newarray int
+    # int[] →
+    astore_1
+    # →
+
+    iconst_0
+    # 0 →
+    istore_2
+    # →
+
+for:
+    iload_2
+    # i →
+    bipush 100
+    # i 100 →
+    if_icmpge endfor
+    # →
+
+    aload_1
+    # array →
+    iload_2
+    dup
+    # array i →
+    iastore
+    # →
+
+    iinc 2 1
+    # →
+    goto for
+
+endfor:
+
+    ldc ""
+    astore_3
+    iconst_0
+    istore_2
+
+for2:
+    iload_2
+    aload_1
+    arraylength
+    if_icmpge endfor2
+
+    aload_1
+    iload_2
+    iaload
+    dup
+    invokestatic java/lang/String valueOf (I)Ljava/lang/String;
+    aload_3
+    swap
+    invokevirtual java/lang/String concat (Ljava/lang/String;)Ljava/lang/String;
+    ldc " "
+    invokevirtual java/lang/String concat (Ljava/lang/String;)Ljava/lang/String;
+    astore_3
+
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    swap
+    invokevirtual java/io/PrintStream println (I)V
+
+    iinc 2 1
+    goto for2
+
+endfor2:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    dup
+    ldc "Total: "
+    invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+    aload_3
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+    iconst_3
+    anewarray Ljava/lang/String;
+    astore 4
+    aload 4
+    iconst_0
+    aaload
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    swap
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+    iconst_1
+    anewarray [[[Ljava/lang/String;
+
+    iconst_4
+    dup
+    dup
+    dup
+    dup
+    multianewarray Ljava/lang/String; 5
+
+    return
+
+.end code
