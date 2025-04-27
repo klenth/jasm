@@ -100,9 +100,9 @@ public class Operands {
         var matcher = INT_PATTERN.matcher(text.toString());
         try {
             if (matcher.matches()) {
-                if (!matcher.group(2).isBlank())
+                if (matcher.group(2) != null)
                     return new Operand.Int(Integer.parseInt(matcher.group(2)));
-                else if (!matcher.group(4).isBlank())
+                else if (matcher.group(4) != null)
                     return new Operand.Int(Integer.parseInt(matcher.group(4), 16));
             }
         } catch (NumberFormatException _) {
@@ -130,9 +130,9 @@ public class Operands {
         var matcher = LONG_PATTERN.matcher(text.toString());
         try {
             if (matcher.matches()) {
-                if (!matcher.group(2).isBlank())
+                if (matcher.group(2) != null)
                     return new Operand.Long(Long.parseLong(matcher.group(2)));
-                else if (!matcher.group(4).isBlank())
+                else if (matcher.group(4) != null)
                     return new Operand.Long(Long.parseLong(matcher.group(4), 16));
             }
         } catch (NumberFormatException _) {

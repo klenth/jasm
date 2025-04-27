@@ -92,12 +92,22 @@ endfor2:
     iconst_1
     anewarray [[[Ljava/lang/String;
 
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc2 0xffl
+    invokevirtual java/io/PrintStream println (J)V
+
     iconst_4
     dup
     dup
     dup
     dup
-    multianewarray Ljava/lang/String; 5
+    multianewarray [[[[[Ljava/lang/String; 5
+
+    new java/lang/RuntimeException
+    dup
+    ldc "Test exception!"
+    invokespecial java/lang/RuntimeException <init> (Ljava/lang/String;)V
+    athrow
 
     return
 
