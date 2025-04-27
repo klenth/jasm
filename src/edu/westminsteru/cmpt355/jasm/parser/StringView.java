@@ -13,18 +13,15 @@ public record StringView(String source, int start, int end) {
         Keep
     }
 
-    public StringView(String source, int start, int end) {
+    public StringView {
         if (start < 0 || start > source.length()
-                || end < 0 || end > source.length()) {
+            || end < 0 || end > source.length()) {
             throw new StringIndexOutOfBoundsException(String.format(
                 "Invalid range for string of length %d: start=%d, end=%d",
                 source.length(), start, end
             ));
         }
 
-        this.source = source;
-        this.start = start;
-        this.end = end;
     }
 
     public static StringView of(String source) {
@@ -62,6 +59,19 @@ public record StringView(String source, int start, int end) {
         for (int i = 0; i < length(); ++i)
             if (codePointAt(i) == ch)
                 return i;
+        return -1;
+    }
+
+    public int indexOf(int ch, Quoted q) {
+        boolean insideQuotes = false;
+        for (int i = 0; i < length(); ++i) {
+            int c = codePointAt(i);
+            if (c == ch && !insideQuotes)
+                return i;
+            else if (q == Quoted.Ignore && c == '"')
+                insideQuotes = !insideQuotes;
+        }
+
         return -1;
     }
 

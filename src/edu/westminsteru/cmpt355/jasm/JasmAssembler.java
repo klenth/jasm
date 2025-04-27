@@ -177,20 +177,67 @@ public class JasmAssembler implements JasmParserListener {
 
     private void buildMethodCode(MethodCode code, CodeBuilder cb) {
         Map<String, Label> labels = new HashMap<>();
-        for (var instr : code.instructions()) {
-            instr.labels().forEach(l ->
-                cb.labelBinding(labels.computeIfAbsent(l.toString(), _ -> cb.newLabel()))
-            );
-            try {
-                Instructions.enter(instr.opcode(), instr.operands(), labels, cb);
-            } catch (AssemblyException ex) {
-                String message = (ex.getCause() != null && ex.getCause().getMessage() != null)
-                    ? ex.getMessage() + "\n" + ex.getCause().getMessage()
-                    : ex.getMessage();
-                errorMessages.add(new ErrorMessage(
-                    message, instr.text(),
-                    instr.line(), ex.getTarget().map(sv -> sv.start() + 1).orElse(ErrorMessage.UNSPECIFIC)
-                ));
+
+        ListIterator<CodeItem> it = code.codeItems().listIterator();
+        while (it.hasNext()) {
+            var item = it.next();
+
+            switch (item) {
+                case Instruction instr
+                    when (instr.opcode().toString().equals("lookupswitch")
+                        || instr.opcode().toString().equals("tableswitch")) -> {
+                    if (!it.hasNext()) {
+                        errorMessages.add(new ErrorMessage(
+                            String.format("Expected .table after opcode %s", instr.opcode()),
+                            instr.text(), instr.line(), ErrorMessage.UNSPECIFIC
+                        ));
+                        continue;
+                    }
+
+                    if (!(it.next() instanceof Table table)) {
+                        it.previous();
+                        errorMessages.add(new ErrorMessage(
+                            String.format("Expected .table after opcode %s", instr.opcode()),
+                            instr.text(), instr.line(), ErrorMessage.UNSPECIFIC
+                        ));
+                    } else {
+                        try {
+                            Instructions.enterTableInstruction(instr.opcode(), instr.operands(), table, labels, cb);
+                        } catch (AssemblyException ex) {
+                            String message = (ex.getCause() != null && ex.getCause().getMessage() != null)
+                                ? ex.getMessage() + "\n" + ex.getCause().getMessage()
+                                : ex.getMessage();
+                            errorMessages.add(new ErrorMessage(
+                                message, instr.text(),
+                                instr.line(), ex.getTarget().map(sv -> sv.start() + 1).orElse(ErrorMessage.UNSPECIFIC)
+                            ));
+                        }
+                    }
+                }
+
+                case Instruction instr -> {
+                    instr.labels().forEach(l ->
+                        cb.labelBinding(labels.computeIfAbsent(l.toString(), _ -> cb.newLabel()))
+                    );
+                    try {
+                        Instructions.enter(instr.opcode(), instr.operands(), labels, cb);
+                    } catch (AssemblyException ex) {
+                        String message = (ex.getCause() != null && ex.getCause().getMessage() != null)
+                            ? ex.getMessage() + "\n" + ex.getCause().getMessage()
+                            : ex.getMessage();
+                        errorMessages.add(new ErrorMessage(
+                            message, instr.text(),
+                            instr.line(), ex.getTarget().map(sv -> sv.start() + 1).orElse(ErrorMessage.UNSPECIFIC)
+                        ));
+                    }
+                }
+
+                case Table table -> {
+                    errorMessages.add(new ErrorMessage(
+                        "Table not expected",
+                        null, ErrorMessage.UNSPECIFIC, ErrorMessage.UNSPECIFIC
+                    ));
+                }
             }
         }
     }

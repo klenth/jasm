@@ -6,6 +6,7 @@ import edu.westminsteru.cmpt355.jasm.parser.StringView;
 import java.lang.classfile.CodeBuilder;
 import java.lang.classfile.Label;
 import java.lang.classfile.TypeKind;
+import java.lang.classfile.instruction.SwitchCase;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.MethodTypeDesc;
 import java.lang.reflect.InvocationTargetException;
@@ -49,22 +50,8 @@ public class Instructions {
                 "Invalid opcode", opcode
             );
 
-        var opcOperands = opc.getOperandTypes();
-        if (opcOperands.length == 0 && !operands.isEmpty())
-            throw new AssemblyException(
-                "Opcode " + opc + " takes no operands",
-                operands.getFirst()
-            );
-        else if (operands.size() != opcOperands.length)
-            throw new AssemblyException(String.format(
-                    "Opcode " + opc + " takes %s",
-                    opcOperands.length == 1
-                        ? "one operand" : opcOperands.length == 2
-                        ? "two operands" : opcOperands.length == 3
-                        ? "three operands" : opcOperands.length + " operands"
-            ), opcode);
+        var ops = checkAndParseOperands(opcode, opc, operands);
 
-        var ops = parseOperands(operands, opcOperands, labels);
         switch (opc) {
             // opcodes without arguments whose enum names match method names in CodeBuilder
             case aaload, aastore, areturn, arraylength, athrow,
@@ -254,6 +241,57 @@ public class Instructions {
         }
    }
 
+   public static void enterTableInstruction(StringView opcode, List<StringView> operands, Table table, Map<String, Label> labels, CodeBuilder cb) throws AssemblyException {
+       Opcode opc = switch (opcode.toString()) {
+           case "lookupswitch" -> Opcode.lookupswitch;
+           case "tableswitch" -> Opcode.tableswitch;
+           default -> throw new AssemblyException(String.format(
+               "Internal error (please report): %s handled as a table instruction", opcode.toString()
+           ), opcode);
+       };
+
+       var ops = checkAndParseOperands(opcode, opc, operands);
+       switch (opc) {
+           case lookupswitch -> {
+               var defaultTarget = labels.computeIfAbsent(
+                   ((Operand.BranchTarget)ops[0]).text(),
+                   l -> cb.newLabel()
+               );
+               cb.lookupswitch(defaultTarget, parseTable(table, labels, cb));
+           }
+
+           case tableswitch -> {
+               var defaultTarget = labels.computeIfAbsent(
+                   ((Operand.BranchTarget)ops[2]).text(),
+                   l -> cb.newLabel()
+               );
+               cb.tableswitch(
+                   _int(ops[0]), _int(ops[1]), defaultTarget,
+                   parseTable(table, labels, cb)
+               );
+           }
+       }
+   }
+
+   private static Operand[] checkAndParseOperands(StringView opcode, Opcode opc, List<StringView> operands) throws AssemblyException {
+       var opcOperands = opc.getOperandTypes();
+       if (opcOperands.length == 0 && !operands.isEmpty())
+           throw new AssemblyException(
+               "Opcode " + opc + " takes no operands",
+               operands.getFirst()
+           );
+       else if (operands.size() != opcOperands.length)
+           throw new AssemblyException(String.format(
+               "Opcode " + opc + " takes %s",
+               opcOperands.length == 1
+                   ? "one operand" : opcOperands.length == 2
+                   ? "two operands" : opcOperands.length == 3
+                   ? "three operands" : opcOperands.length + " operands"
+           ), opcode);
+
+       return parseOperands(operands, opcOperands);
+   }
+
     private static int _int(Operand op) {
         return ((Operand.Int)op).value();
     }
@@ -334,12 +372,32 @@ public class Instructions {
         }
     }
 
-    private static Operand[] parseOperands(List<StringView> operands, OperandType[] opTypes, Map<String, Label> labels) throws AssemblyException {
+    private static Operand[] parseOperands(List<StringView> operands, OperandType[] opTypes) throws AssemblyException {
         Operand[] ops = new Operand[opTypes.length];
 
         for (int i = 0; i < ops.length; ++i)
             ops[i] = Operands.parseOperand(operands.get(i), opTypes[i]);
 
         return ops;
+    }
+
+    private static List<SwitchCase> parseTable(Table table, Map<String, Label> labels, CodeBuilder cb) throws AssemblyException {
+        var cases = new ArrayList<SwitchCase>(table.entries().size());
+        for (var entry : table.entries()) {
+            try {
+                int value = Integer.parseInt(entry.label().toString());
+                var target = labels.computeIfAbsent(
+                    entry.target().toString(),
+                    l -> cb.newLabel()
+                );
+                cases.add(SwitchCase.of(value, target));
+            } catch (NumberFormatException _) {
+                throw new AssemblyException(
+                    "Invalid integer", entry.label()
+                );
+            }
+        }
+
+        return cases;
     }
 }

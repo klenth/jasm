@@ -1,0 +1,118 @@
+.source switch.jasm
+.class public Switch
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Enter a number 0-100: "
+    invokevirtual java/io/PrintStream print (Ljava/lang/String;)V
+
+    new java/util/Scanner
+    dup
+    dup
+    getstatic java/lang/System in Ljava/io/InputStream;
+    invokespecial java/util/Scanner <init> (Ljava/io/InputStream;)V
+    astore_2
+
+    invokevirtual java/util/Scanner nextInt ()I
+    dup
+    istore_1
+
+    lookupswitch switchdefault
+    .table
+        2: prime
+        3: prime
+        5: prime
+        7: prime
+        11: prime
+        13: prime
+        17: prime
+        19: prime
+        23: prime
+        29: prime
+        31: prime
+        37: prime
+        41: prime
+        43: prime
+        47: prime
+        53: prime
+        59: prime
+        61: prime
+        67: prime
+        71: prime
+        73: prime
+        79: prime
+        83: prime
+        89: prime
+        91: prime
+        97: prime
+    .end table
+
+prime:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "That is prime!"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    goto switchend
+
+switchdefault:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "That is not prime :("
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+switchend:
+
+    iload_1
+    tableswitch 60 100 switch2default
+    .table
+        60: grade_F
+        70: grade_D
+        80: grade_C
+        90: grade_B
+        100: grade_A
+    .end table
+
+grade_F:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "F"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    goto switch2end
+
+grade_D:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "D"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    goto switch2end
+
+grade_C:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "C"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    goto switch2end
+
+grade_B:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "B"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    goto switch2end
+
+grade_A:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "A"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    goto switch2end
+
+switch2default:
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Invalid grade!"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+switch2end:
+
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Bye!"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+    return
+
+
+.end code

@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 public class JasmParser {
 
     private enum State {
-        Global, Code
+        Global, Code, Table
     }
 
     private BufferedReader in;
@@ -83,34 +83,42 @@ public class JasmParser {
         StringView head = line.firstWord(' ').trim();
         StringView tail = line.tail(head).trim();
 
-        switch (head.toString()) {
-            case ".source" -> processSourceDirective(head, tail);
-            case ".class", ".interface", ".enum" -> processClassDirective(head, tail);
-            case ".super" -> processSuperDirective(head, tail);
-            case ".implements" -> processImplementsDirective(head, tail);
-            case ".field" -> processFieldDirective(head, tail);
-            case ".method" -> processMethodDirective(head, tail);
-            case ".code" -> processCodeDirective(head, tail);
-            case ".end" -> {
-                if (tail.toString().endsWith("code"))
-                    processEndCodeDirective(head, tail);
-                else
-                    fireExceptionOccurred(
-                        "Unexpected token: " + tail,
-                        lineNumber, tail.start(),
-                        tail.source()
-                    );
-            }
+        if (state == State.Table) {
+            if (head.toString().equals(".end") && tail.toString().equals("table"))
+                processEndTableDirective(head, tail);
+            else
+                processTableLine(head, tail);
+        } else {
+            switch (head.toString()) {
+                case ".source" -> processSourceDirective(head, tail);
+                case ".class", ".interface", ".enum" -> processClassDirective(head, tail);
+                case ".super" -> processSuperDirective(head, tail);
+                case ".implements" -> processImplementsDirective(head, tail);
+                case ".field" -> processFieldDirective(head, tail);
+                case ".method" -> processMethodDirective(head, tail);
+                case ".code" -> processCodeDirective(head, tail);
+                case ".table" -> processTableDirective(head, tail);
+                case ".end" -> {
+                    if (tail.toString().equals("code"))
+                        processEndCodeDirective(head, tail);
+                    else
+                        fireExceptionOccurred(
+                            "Unexpected token: " + tail,
+                            lineNumber, tail.start(),
+                            tail.source()
+                        );
+                }
 
-            default -> {
-                if (state == State.Code)
-                    processCodeLine(head, tail);
-                else
-                    fireExceptionOccurred(
-                        "Unexpected token: " + head,
-                        lineNumber, head.start(),
-                        head.source()
-                    );
+                default -> {
+                    if (state == State.Code)
+                        processCodeLine(head, tail);
+                    else
+                        fireExceptionOccurred(
+                            "Unexpected token: " + head,
+                            lineNumber, head.start(),
+                            head.source()
+                        );
+                }
             }
         }
     }
@@ -310,17 +318,80 @@ public class JasmParser {
     private void processEndCodeDirective(StringView head, StringView tail) {
         if (state != State.Code) {
             fireExceptionOccurred(
-                ".end code unexpected here",
+                (state == State.Table) ? ".end code unexpected here (missing .end table?)" : ".end code unexpected here",
                 lineNumber, head.start(),
                 head.source()
             );
             abortParsing();
             return;
-        }
+        } else if (!tail.toString().equals("code"))
+            fireExceptionOccurred(
+                "Unexpected trailing text after .end code",
+                lineNumber, tail.tail(tail.firstWord(' ')).start(),
+                head.source()
+            );
 
         state = State.Global;
         listener.endCodeDirective(this);
     }
+
+    private void processTableDirective(StringView head, StringView tail) {
+        if (state != State.Code) {
+            fireExceptionOccurred(
+                ".table unexpected here",
+                lineNumber, head.start(),
+                head.source()
+            );
+            abortParsing();
+            return;
+        } else if (!tail.isBlank())
+            fireExceptionOccurred(
+                "Unexpected trailing text after .table",
+                lineNumber, tail.trim().start(),
+                tail.source()
+            );
+
+        state = State.Table;
+        listener.tableDirective(this);
+    }
+
+    private void processTableLine(StringView head, StringView tail) {
+        Runnable fireError = () -> fireExceptionOccurred(
+            "Expected table entry",
+            lineNumber, head.start(),
+            head.source()
+        );
+
+        if (!head.toString().endsWith(":")) {
+            return;
+        } else if (tail.isBlank()) {
+            fireError.run();
+            return;
+        }
+
+        listener.tableLine(this, head.substring(0, head.length() - 1), tail);
+    }
+
+    private void processEndTableDirective(StringView head, StringView tail) {
+        if (state != State.Table) {
+            fireExceptionOccurred(
+                ".end table unexpected here",
+                lineNumber, head.start(),
+                head.source()
+            );
+            abortParsing();
+            return;
+        } else if (!tail.toString().equals("table"))
+            fireExceptionOccurred(
+                "Unexpected trailing text after .end table",
+                lineNumber, tail.tail(tail.firstWord(' ')).start(),
+                head.source()
+            );
+
+        state = State.Code;
+        listener.endTableDirective(this);
+    }
+
 
     private boolean validateTypeDescriptor(StringView typeDesc) {
         if (!TYPE_DESCRIPTOR_PATTERN.matcher(typeDesc.toString()).matches()) {
@@ -357,108 +428,4 @@ public class JasmParser {
         }
         return true;
     }
-
-    // Operand parsing
-    /*
-    private static Pattern INT_PATTERN = Pattern.compile("^([0-9]+)$");
-    private static Pattern LONG_PATTERN = Pattern.compile("^([0-9]+)[Ll]$");
-    private static Pattern FLOAT_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+)?)[Ff]$");
-    private static Pattern DOUBLE_PATTERN = Pattern.compile("^(-?([0-9]+|[0-9]+\\.[0-9]*|[0-9]*\\.[0-9]+)([Ee][+-]?[0-9]+)?)$");
-    private static Pattern STRING_PATTERN = Pattern.compile("^\"([^\"]|\\\\\")*\"$");
-    private static Pattern CHAR_PATTERN = Pattern.compile("^'(\\\\(\\\\|.)|[^'\\\\])'$");
-    private static Pattern IDENTIFIER_PATTERN = Pattern.compile("^([a-zA-Z_0-9/\\[$<>;()-]+)$");
-
-    private Operand parseOperand(StringView text) {
-        Pattern[] patterns = {
-            INT_PATTERN, LONG_PATTERN, FLOAT_PATTERN, DOUBLE_PATTERN, STRING_PATTERN, CHAR_PATTERN, IDENTIFIER_PATTERN
-        };
-        List<Function<String, ? extends Operand>> ctors = List.of(
-            Operand.Int::new, Operand.Long::new, Operand.Float::new, Operand.Double::new,
-            s -> parseStringOperand(text, s), s -> parseCharOperand(text, s),
-            Operand.Identifier::new
-        );
-
-        String s = text.toString();
-        for (int i = 0; i < patterns.length; ++i) {
-            if (patterns[i].matcher(s).matches())
-                return ctors.get(i).apply(s);
-        }
-
-        fireExceptionOccurred(
-            "Invalid operand",
-            lineNumber, text.start(),
-            text.source()
-        );
-
-        return null;
-    }
-
-    private Operand.String parseStringOperand(StringView view, String source) {
-        // strip off " " around string
-        source = source.substring(1, source.length() - 1);
-        StringBuilder sb = new StringBuilder(source.length() * 11 / 10);
-
-        for (int i = 0; i < source.length(); ++i) {
-            int c = source.codePointAt(i);
-            if (c == '\\' && i + 1 < source.length()) {
-                ++i;
-                char esc = escape(view, i - 1, source.charAt(i));
-                sb.append(esc);
-            } else
-                sb.appendCodePoint(c);
-        }
-
-        return new Operand.String(sb.toString());
-    }
-
-    private Operand.Int parseCharOperand(StringView view, String source) {
-        // strip of ' ' around character
-        source = source.substring(1, source.length() - 1);
-        if (source.length() == 2 && source.codePointAt(0) == '\\')
-            return new Operand.Int("" + (int)escape(view, 1, source.charAt(1)));
-        else if (source.length() == 1)
-            return new Operand.Int("" + (int)source.charAt(0));
-        else {
-            fireExceptionOccurred(
-                "Invalid character",
-                lineNumber, view.start() - 1,
-                line
-            );
-            return new Operand.Int("0");
-        }
-    }
-
-    private char escape(StringView view, int index, char c) {
-        return switch (c) {
-            case '0' -> '\0';
-            case 'b' -> '\b';
-            case 'f' -> '\f';
-            case 'n' -> '\n';
-            case 'r' -> '\r';
-            case 't' -> '\t';
-            case '"' -> '\"';
-            case '\'' -> '\'';
-            case '\\' -> '\\';
-            case 'u' -> {
-                fireExceptionOccurred(
-                    "Unicode escape sequences \\uXXXX not supported",
-                    lineNumber, view.start() + index,
-                    line
-                );
-
-                yield '\0';
-            }
-            default -> {
-                fireExceptionOccurred(
-                    String.format("Invalid escape sequence"),
-                    lineNumber, view.start() + index,
-                    line
-                );
-
-                yield '\0';
-            }
-        };
-    }
-
-     */
 }

@@ -17,5 +17,8 @@ public interface JasmParserListener {
     default void codeLabel(JasmParser parser, StringView labelName) {}
     default void codeInstruction(JasmParser parser, StringView opcode, List<StringView> operands) {}
     default void endCodeDirective(JasmParser parser) {}
+    default void tableDirective(JasmParser parser) {}
+    default void tableLine(JasmParser parser, StringView label, StringView target) {}
+    default void endTableDirective(JasmParser parser) {}
     default void endOfFile(JasmParser parser) {}
 }

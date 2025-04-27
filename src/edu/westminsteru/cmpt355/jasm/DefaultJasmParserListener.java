@@ -34,9 +34,10 @@ class DefaultJasmParserListener implements JasmParserListener {
     private List<FieldDefinition> fields = new ArrayList<>();
     private List<MethodDefinition> methods = new ArrayList<>();
     private Map<MethodDefinition, MethodCode> methodCodes = new HashMap<>();
+    private List<Table.Entry> tableEntries;
 
     // per-method stuff
-    private List<Instruction> currentMethodCodeInstructions = null;
+    private List<CodeItem> currentMethodCodeItems = null;
     private List<StringView> instructionLabels = new ArrayList<>();
 
     @Override
@@ -96,13 +97,13 @@ class DefaultJasmParserListener implements JasmParserListener {
 
     @Override
     public void codeDirective(JasmParser parser) {
-        if (this.currentMethodCodeInstructions != null)
+        if (this.currentMethodCodeItems != null)
             errors.add(new ErrorMessage(
                 "Duplicate .code directive", parser.getCurrentLine(),
                 parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
             ));
         else
-            this.currentMethodCodeInstructions = new ArrayList<>();
+            this.currentMethodCodeItems = new ArrayList<>();
     }
 
     @Override
@@ -118,7 +119,7 @@ class DefaultJasmParserListener implements JasmParserListener {
 
     @Override
     public void codeInstruction(JasmParser parser, StringView opcode, List<StringView> operands) {
-        this.currentMethodCodeInstructions.add(
+        this.currentMethodCodeItems.add(
             new Instruction(new ArrayList<>(instructionLabels), opcode, operands, parser.getCurrentLine(), parser.getCurrentLineNumber())
         );
         instructionLabels.clear();
@@ -126,15 +127,31 @@ class DefaultJasmParserListener implements JasmParserListener {
 
     @Override
     public void endCodeDirective(JasmParser parser) {
-        if (currentMethodCodeInstructions == null)
+        if (currentMethodCodeItems == null)
             errors.add(new ErrorMessage(
                 ".end code directive not expected here", parser.getCurrentLine(),
                 parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
             ));
         else {
-            methodCodes.put(methods.getLast(), new MethodCode(currentMethodCodeInstructions));
-            currentMethodCodeInstructions = null;
+            methodCodes.put(methods.getLast(), new MethodCode(currentMethodCodeItems));
+            currentMethodCodeItems = null;
         }
+    }
+
+    @Override
+    public void tableDirective(JasmParser parser) {
+        tableEntries = new ArrayList<>();
+    }
+
+    @Override
+    public void tableLine(JasmParser parser, StringView label, StringView target) {
+        tableEntries.add(new Table.Entry(label, target));
+    }
+
+    @Override
+    public void endTableDirective(JasmParser parser) {
+        currentMethodCodeItems.add(new Table(tableEntries));
+        tableEntries = null;
     }
 
     @Override

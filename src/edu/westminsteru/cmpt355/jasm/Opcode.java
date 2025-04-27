@@ -175,7 +175,7 @@ public enum Opcode {
     lload_3(),
     lmul(),
     lneg(),
-    // lookupswitch
+    lookupswitch(BranchTarget), // special handling
     lor(),
     lrem(),
     lreturn(),
@@ -204,8 +204,8 @@ public enum Opcode {
     saload(),
     sastore(),
     sipush(Int),
-    swap();
-    // tableswitch
+    swap(),
+    tableswitch(Int, Int, BranchTarget); // special handling
     // wide
 
     private String name;
