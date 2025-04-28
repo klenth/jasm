@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: edu.westminsteru.cmpt355.jasm.Main
+Main-Class: edu.westminsteru.jasm.Main
 

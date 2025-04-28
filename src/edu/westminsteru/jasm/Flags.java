@@ -1,4 +1,4 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
 import java.lang.classfile.ClassFile;
 import java.util.List;

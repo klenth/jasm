@@ -1,6 +1,6 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-public class AbortClassfileGenerationException extends RuntimeException {
+class AbortClassfileGenerationException extends RuntimeException {
     public AbortClassfileGenerationException(String message) {
         super(message);
     }

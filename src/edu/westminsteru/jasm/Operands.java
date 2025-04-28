@@ -1,11 +1,10 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-import edu.westminsteru.cmpt355.jasm.parser.StringView;
+import edu.westminsteru.jasm.parser.StringView;
 
-import java.util.Map;
 import java.util.regex.*;
 
-public class Operands {
+class Operands {
 
     private static final String INTEGER_REGEX =
         // decimal

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr" class="fancy">
+    <head>
+        <meta charset="utf-8">
+        <title>jasm: a Java Virtual Machine assembler</title>
+        <link rel="stylesheet" href="docs.css">
+    </head>
+
+    <body>
+
+        <nav>
+            <ul class="card-links"></ul>
+            <div class="icon"></div>
+            <div class="plain-link"><a href="?plain">Printable version</a></div>
+            <span class="dark-mode-toggle" title="Toggle dark mode"></span>
+        </nav>
+        
+        <main class="justified">
+            <div class="title-card">
+                <h1>jasm: a Java Virtual Machine assembler</h1>
+
+                <p>
+                    jasm is an assembler/disassembler for the Java Virtual Machine, designed for use in the classroom (e.g. for a compilers class). Its syntax was originally derived from the venerable <a href="https://jasmin.sourceforge.net/" target="_blank">Jasmin</a> assembler but has since evolved separately.
+                </p>
+            </div>
+        
+            <div class="cards">
+                <div class="card">
+                    <div class="title">Usage</div>
+
+                    <p>
+                        jasm can be invoked either directly through Java code; there is also a simple CLI tool supplied.
+                    </p>
+
+                    <h2>Direct use from Java</h2>
+                    <ol>
+                        <li>Create an instance of <code>JasmAssembler</code> (in the <code>edu.westminsteru.jasm</code> package) by calling one of its static methods — either <code>reading(String)</code> to read code directly from a string or <code>reading(Reader)</code> to read from a <code>java.io.Reader</code> object.</li>
+                        <li>Call its <code>assemble()</code> method to assemble the code in whichever source was supplied when the object was created. It returns a value from the <code>Status</code> enum, either <code>Success</code> or <code>Failure</code>.</li>
+                        <li>If the return value was <code>Failure</code>, call the <code>getErrorMessages()</code> method to obtain a <code>List</code> of <code>ErrorMessage</code> objects. The <code>ErrorMessage</code>s contain a short description of the error as well information on where in the file the error occurred; it has a handy <code>printMessage</code> method, suitable for displaying a nicely-formatted message to a user.</li>
+                        <li>If there were no errors (if the <code>assemble()</code> returned <code>Success</code>), you can obtain the assembled bytecode by calling the creatively-titled <code>getAssembledBytecodes()</code> method to obtain a <code>List</code> of <code>Bytecode</code> objects, each consisting of the name of a class and a <code>byte[]</code> of its bytecode, suitable for saving to a file or passing directly to a <code>ClassLoader</code>.</li>
+                    </ol>
+                    <p>
+                        For full details on the available classes and their methods, see the <a href="api/">API documentation</a>.
+                    </p>
+                </div>
+            </div>
+        </main>
+                
+        <script src="docs.js"></script>
+    </body>
+</html>

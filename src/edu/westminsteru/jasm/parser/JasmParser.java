@@ -1,19 +1,32 @@
-package edu.westminsteru.cmpt355.jasm.parser;
+package edu.westminsteru.jasm.parser;
 
-import edu.westminsteru.cmpt355.jasm.Flags;
-import edu.westminsteru.cmpt355.jasm.Operand;
+import edu.westminsteru.jasm.Flags;
 
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+/**
+ * A parser for jasm code. This parser does not construct any sort of parse tree on its own; rather, an implementation of {@link edu.westminsteru.jasm.parser.JasmParserListener} is notified as elements of the code are parsed.
+ */
 public class JasmParser {
 
-    private enum State {
-        Global, Code, Table
+    /**
+     * An enum describing the possible states the parser can be in.
+     */
+    public enum State {
+        /** The initial parser state, during which it expects to see global directives (such as {@code .source}, {@code .class}, etc.). */
+        Global,
+        /** The state in which the parser is reading the code of a method and therefore expects to see instructions. */
+        Code,
+        /** The state in which the parser is reading entries of a switch table. */
+        Table,
+        /** The state in which the parser has completed reading the input. */
+        EndOfInput,
+        /** The state in which the parser has aborted parsing. */
+        Aborted
     }
 
     private BufferedReader in;
@@ -39,35 +52,65 @@ public class JasmParser {
             ")$"
     );
 
-    public JasmParser(BufferedReader in, JasmParserListener listener) {
-        this.in = in;
+    /**
+     * Create a new {@code JasmParser}
+     * @param in the {@code Reader} to read from
+     * @param listener the listener to notify of parsing events
+     */
+    public JasmParser(Reader in, JasmParserListener listener) {
+        this.in = (in instanceof BufferedReader br) ? br : new BufferedReader(in);
         this.listener = listener;
     }
 
-    public JasmParser(Reader in, JasmParserListener listener) {
-        this(new BufferedReader(in), listener);
-    }
-
+    /**
+     * Parses the input. Callbacks of the supplied {@link edu.westminsteru.jasm.parser.JasmParserListener} will be called as elements of the file are parsed.
+     */
     public void parse() {
+        if (state != State.Global)
+            throw new IllegalStateException("parse() has already been called");
         in.lines().map(StringView::of).forEach(this::process);
-        listener.endOfFile(this);
+        state = State.EndOfInput;
+        listener.endOfInput(this);
     }
 
+    /**
+     * Aborts parsing the input. The {@link edu.westminsteru.jasm.parser.JasmParserListener listener} may call this method if it wishes to discontinue parsing.
+     */
     public void abortParsing() {
         this.aborted = true;
     }
 
+    /**
+     * Returns the current state the parser is in.
+     * @return the current state
+     */
+    public State getState() {
+        return state;
+    }
+
+    /**
+     * Returns the text of the current line being parsed (intended to be used by the {@link edu.westminsteru.jasm.parser.JasmParserListener listener}).
+     * @return a {@link java.lang.String} of the current line of text from the file
+     */
     public String getCurrentLine() {
         return line;
     }
 
+
+    /**
+     * Returns the number of the current line being parsed (intended to be used by the {@link edu.westminsteru.jasm.parser.JasmParserListener listener}) — the first line of the file is line 1.
+     * @return the line number, counted from 1
+     */
     public int getCurrentLineNumber() {
         return lineNumber;
     }
 
     private void process(StringView line) {
-        if (aborted)
+        if (aborted) {
+            state = State.Aborted;
             return;
+        }
+
         this.line = line.source();
         ++lineNumber;
 
@@ -287,8 +330,8 @@ public class JasmParser {
                 tail.source()
             );
 
-        state = State.Code;
         listener.codeDirective(this);
+        state = State.Code;
     }
 
     private void processCodeLine(StringView head, StringView tail) {
@@ -331,8 +374,8 @@ public class JasmParser {
                 head.source()
             );
 
-        state = State.Global;
         listener.endCodeDirective(this);
+        state = State.Global;
     }
 
     private void processTableDirective(StringView head, StringView tail) {
@@ -351,8 +394,8 @@ public class JasmParser {
                 tail.source()
             );
 
-        state = State.Table;
         listener.tableDirective(this);
+        state = State.Table;
     }
 
     private void processTableLine(StringView head, StringView tail) {
@@ -388,8 +431,8 @@ public class JasmParser {
                 head.source()
             );
 
-        state = State.Code;
         listener.endTableDirective(this);
+        state = State.Code;
     }
 
 

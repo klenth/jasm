@@ -1,6 +1,9 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-import edu.westminsteru.cmpt355.jasm.parser.*;
+import edu.westminsteru.jasm.parser.*;
+import edu.westminsteru.jasm.parser.JasmParser;
+import edu.westminsteru.jasm.parser.JasmParserListener;
+import edu.westminsteru.jasm.parser.StringView;
 
 import java.io.*;
 import java.lang.classfile.*;

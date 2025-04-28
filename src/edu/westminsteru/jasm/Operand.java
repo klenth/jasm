@@ -1,6 +1,6 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-public sealed interface Operand {
+sealed interface Operand {
 
     record Int(int value) implements Operand {
     }

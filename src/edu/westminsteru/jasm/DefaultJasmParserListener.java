@@ -1,9 +1,9 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-import edu.westminsteru.cmpt355.jasm.parser.JasmParser;
-import edu.westminsteru.cmpt355.jasm.parser.JasmParserListener;
-import edu.westminsteru.cmpt355.jasm.parser.JasmSyntaxException;
-import edu.westminsteru.cmpt355.jasm.parser.StringView;
+import edu.westminsteru.jasm.parser.JasmParser;
+import edu.westminsteru.jasm.parser.JasmParserListener;
+import edu.westminsteru.jasm.parser.JasmSyntaxException;
+import edu.westminsteru.jasm.parser.StringView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -155,7 +155,7 @@ class DefaultJasmParserListener implements JasmParserListener {
     }
 
     @Override
-    public void endOfFile(JasmParser parser) {
+    public void endOfInput(JasmParser parser) {
         commitClassSpec();
     }
 

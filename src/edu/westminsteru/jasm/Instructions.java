@@ -1,7 +1,6 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-import edu.westminsteru.cmpt355.jasm.parser.JasmSyntaxException;
-import edu.westminsteru.cmpt355.jasm.parser.StringView;
+import edu.westminsteru.jasm.parser.StringView;
 
 import java.lang.classfile.CodeBuilder;
 import java.lang.classfile.Label;
@@ -9,12 +8,11 @@ import java.lang.classfile.TypeKind;
 import java.lang.classfile.instruction.SwitchCase;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.MethodTypeDesc;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.*;
 
-public class Instructions {
+class Instructions {
 
     private static final Pattern LOAD_STORE_PATTERN = Pattern.compile(
         "^[adfil](load|store)(_[0123])?$"

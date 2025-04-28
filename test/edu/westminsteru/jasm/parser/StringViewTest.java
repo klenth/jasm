@@ -1,10 +1,10 @@
-package edu.westminsteru.cmpt355.jasm.parser;
+package edu.westminsteru.jasm.parser;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import static edu.westminsteru.cmpt355.jasm.parser.StringView.Quoted.*;
+import static edu.westminsteru.jasm.parser.StringView.Quoted.*;
 
 class StringViewTest {
 

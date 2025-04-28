@@ -1,4 +1,4 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;

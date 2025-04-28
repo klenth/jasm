@@ -1,4 +1,4 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
 public enum Status {
     Success, Failure

@@ -1,18 +1,12 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-import edu.westminsteru.cmpt355.jasm.parser.*;
+import edu.westminsteru.jasm.parser.*;
+import edu.westminsteru.jasm.parser.JasmParserListener;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
-import java.lang.classfile.*;
-import java.lang.classfile.attribute.SourceFileAttribute;
-import java.lang.constant.ClassDesc;
-import java.lang.constant.MethodTypeDesc;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.*;
 
 public class Main implements JasmParserListener {
 

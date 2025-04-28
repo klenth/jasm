@@ -1,10 +1,10 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-import edu.westminsteru.cmpt355.jasm.parser.StringView;
+import edu.westminsteru.jasm.parser.StringView;
 
 import java.util.Optional;
 
-public class AssemblyException extends Exception {
+class AssemblyException extends Exception {
 
     private StringView targetView = null;
 

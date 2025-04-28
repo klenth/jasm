@@ -1,6 +1,6 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-public enum OperandType {
+enum OperandType {
     Int, Float, Long, Double, String,
     ClassName, ArrayType, Identifier, Descriptor, MethodDescriptor, BranchTarget
 }

@@ -1,4 +1,4 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
 public record Bytecode(String className, byte[] data) {
 }

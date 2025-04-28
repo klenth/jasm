@@ -1,8 +1,8 @@
-package edu.westminsteru.cmpt355.jasm;
+package edu.westminsteru.jasm;
 
-import static edu.westminsteru.cmpt355.jasm.OperandType.*;
+import static edu.westminsteru.jasm.OperandType.*;
 
-public enum Opcode {
+enum Opcode {
 
     aaload(),
     aastore(),
