@@ -1,6 +1,5 @@
 package edu.westminsteru.jasm;
 
-import edu.westminsteru.jasm.parser.*;
 import edu.westminsteru.jasm.parser.JasmParserListener;
 
 import java.io.BufferedReader;
@@ -8,9 +7,25 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class Main implements JasmParserListener {
+/**
+ * A command-line interface for assembling jasm code. Usage:
+ * <pre>
+ *     java edu.westminsteru.jasm.Main [options] filename
+ *
+ *     Options:
+ *          -h, -help, --help   Show this help message
+ *          -d dir              Save output in the given directory (will be created if it does not exist)
+ * </pre>
+ */
+public class Main {
 
-    public static void main(String... args) throws Exception {
+    private Main() {}
+
+    /**
+     * Entry point to the command-line interface
+     * @param args          command-line arguments
+     */
+    public static void main(String... args) {
         String inputFilename = null;
         String outPrefix = ".";
 
@@ -47,12 +62,14 @@ public class Main implements JasmParserListener {
                 Files.createDirectories(outPath);
                 assembler.getAssembledBytecodes().forEach(bc -> saveBytecode(bc, outPath));
             }
+        } catch (IOException ex) {
+            System.err.printf("Unable to create output files: %s\n", ex.getMessage());
         }
     }
 
     private static void printUsage() {
         System.out.println("""
-                Usage: java edu.westminsteru.cmpt355.jasm.Main [options] filename
+                Usage: java edu.westminsteru.jasm.Main [options] filename
                 
                 Options:
                     -h      Show this help message

@@ -1,8 +1,6 @@
 package edu.westminsteru.jasm;
 
-import edu.westminsteru.jasm.parser.*;
 import edu.westminsteru.jasm.parser.JasmParser;
-import edu.westminsteru.jasm.parser.JasmParserListener;
 import edu.westminsteru.jasm.parser.StringView;
 
 import java.io.*;
@@ -12,8 +10,20 @@ import java.lang.constant.ClassDesc;
 import java.lang.constant.MethodTypeDesc;
 import java.util.*;
 
-public class JasmAssembler implements JasmParserListener {
+/**
+ * Assembler for jasm files. The usual process for using this class looks like
+ * <ol>
+ *     <li>Use the {@link #reading(String) String} or {@link #reading(Reader) Reader} overload of the static {@code reading} method to obtain an instance that reads from the given input.</li>
+ *     <li>Call {@link #assemble()} to attempt assembly of the input code. This method returns {@link Status}.{@code Success} or {@code .Failure} to signify success or failure of assembly.</li>
+ *     <li>If {@code assemble()} failed, use {@link #getErrorMessages()} to obtain a list of {@link ErrorMessage}s describing the errors that occurred.</li>
+ *     <li>Otherwise, the {@link #getAssembledBytecodes()} returns {@link Bytecode} objects, each consisting of a class name and its assembled bytecode (as a {@code byte[]}). These bytes are suitable to be written to a .class file or given to a {@link ClassLoader}.</li>
+ * </ol>
+ */
+public class JasmAssembler {
 
+    /**
+     * The current version of the jasm assembler
+     */
     public static final String JASM_VERSION = "0.2";
 
     @FunctionalInterface
@@ -27,17 +37,28 @@ public class JasmAssembler implements JasmParserListener {
     private ClassFile classFile;
     private ClassBuilder cb;
     private List<ErrorMessage> errorMessages = new ArrayList<>();
-    private List<Bytecode> assembledBytecodes = new ArrayList<>();
+    private List<Bytecode> assembledBytecodes = null;
+    private boolean haveAssembled = false;
 
     private JasmAssembler(BufferedReader in) {
         this.in = in;
     }
 
+    /**
+     * Creates a {@code JasmAssembler} that reads from the given {@code Reader}.
+     * @param in the reader to read code from
+     * @return a {@code JasmAssembler}
+     */
     public static JasmAssembler reading(Reader in) {
         BufferedReader buffered = (in instanceof BufferedReader br) ? br : new BufferedReader(in);
         return new JasmAssembler(buffered);
     }
 
+    /**
+     * Creates a {@code JasmAssembler} that reads code directly from a {@code String}.
+     * @param input the {@code String} to read code from
+     * @return a {@code JasmAssembler}
+     */
     public static JasmAssembler reading(String input) {
         return new JasmAssembler(
             new BufferedReader(
@@ -46,9 +67,16 @@ public class JasmAssembler implements JasmParserListener {
         );
     }
 
+    /**
+     * Attempts to assemble the code obtained from whatever input source was given when the {@code JasmAssembler} was created. This method should be called only once.
+     * @return {@link Status#Success} if assembly succeeded, or {@link Status#Failure} if there was an error in the code
+     */
     public Status assemble() {
-        // first phase: parsing
+        if (haveAssembled)
+            throw new IllegalStateException("assemble() has already been called");
+        haveAssembled = true;
 
+        // first phase: parsing
         listener = new DefaultJasmParserListener();
         parser = new JasmParser(in, listener);
         parser.parse();
@@ -94,11 +122,28 @@ public class JasmAssembler implements JasmParserListener {
             return Status.Failure;
     }
 
+    /**
+     * Returns the bytecodes resulting from a previous successful call to {@link #assemble()}.
+     * @return a list of the bytecodes
+     * @throws IllegalArgumentException if this method is called before {@link #assemble()}, or if {@code assemble()} returned {@link Status#Failure}
+     */
     public List<Bytecode> getAssembledBytecodes() {
+        if (!haveAssembled)
+            throw new IllegalArgumentException("getAssembledBytecodes() called before assemble()");
+        else if (assembledBytecodes == null)
+            throw new IllegalStateException("getAssembledBytecodes() called after assembly failed");
+
         return assembledBytecodes;
     }
 
+    /**
+     * Returns the error messages resulting from a previous unsuccessful call to {@link #assemble()}.
+     * @return a list of error messages (empty if there were no error messages)
+     * @throws IllegalStateException if this method is called before {@link #assemble()}
+     */
     public List<ErrorMessage> getErrorMessages() {
+        if (!haveAssembled)
+            throw new IllegalArgumentException("getErrorMessages() called before assemble()");
         return errorMessages;
     }
 

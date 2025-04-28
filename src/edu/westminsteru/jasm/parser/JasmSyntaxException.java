@@ -11,8 +11,12 @@ import java.io.PrintWriter;
  */
 public class JasmSyntaxException extends RuntimeException {
 
-    private int lineNumber, columnNumber;
-    private String line;
+    /** The line number */
+    private final int lineNumber;
+    /** The column number */
+    private final int columnNumber;
+    /** The text of the line */
+    private final String line;
 
     /**
      * Creates a {@code JasmSyntaxException}.
@@ -73,7 +77,7 @@ public class JasmSyntaxException extends RuntimeException {
     }
 
     /**
-     * Convenience method that prints the error message to {@link System#err {@code System.err}}.
+     * Convenience method that prints the error message to {@link System#err}.
      */
     public void print() {
         print(System.err);

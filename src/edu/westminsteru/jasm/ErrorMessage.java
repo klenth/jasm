@@ -13,9 +13,17 @@ import java.io.PrintWriter;
  *                      at a particular column (the first column is column 1)
  */
 public record ErrorMessage(String message, String sourceLine, int lineNumber, int columnNumber) {
+    /** Sentinel value for line or column signifying that the error doesn't pertain to a specific line or column number */
     public static final int UNSPECIFIC = -1;
 
-    public ErrorMessage(String message, String sourceLine, int lineNumber, int columnNumber) {
+    /**
+     * Creates a new {@code ErrorMessage}.
+     * @param message      a description of the error
+     * @param sourceLine   the text of the line containing the error, or {@code null} if the error does not occur on a specific line
+     * @param lineNumber   the number of the line containing the error, counted from 1, or {@link #UNSPECIFIC} if the error does not occur on a specific line
+     * @param columnNumber the number of the column within the line containing the error, counted from 1, or {@code UNSPECIFIC} if the error does not occur at a specific column
+     */
+    public ErrorMessage {
         if (message == null || message.isBlank())
             throw new IllegalArgumentException("Message cannot be null or blank");
         if (lineNumber < UNSPECIFIC)
@@ -23,19 +31,20 @@ public record ErrorMessage(String message, String sourceLine, int lineNumber, in
         if (columnNumber < UNSPECIFIC)
             throw new IllegalArgumentException(String.format("Invalid column number: %d", columnNumber));
 
-        this.message = message;
-        this.sourceLine = sourceLine;
-        this.lineNumber = lineNumber;
-        this.columnNumber = columnNumber;
     }
 
     /**
-     * Creates a new ErrorMessage with no source line and {@code UNSPECIFIC} line and column numbers
+     * Creates a new ErrorMessage with no source line and {@code UNSPECIFIC} line and column numbers.
+     * @param message   a description of the error
      */
     public ErrorMessage(String message) {
         this(message, null, UNSPECIFIC, UNSPECIFIC);
     }
 
+    /**
+     * Formats this {@code ErrorMessage} in a format suitable for presenting to a user.
+     * @return the formatted message
+     */
     public String format() {
         var sb = new StringBuilder();
         sb.append("Error");
@@ -51,11 +60,19 @@ public record ErrorMessage(String message, String sourceLine, int lineNumber, in
         return sb.toString();
     }
 
+    /**
+     * Formats this {@code ErrorMessage} and prints it to the given {@code PrintWriter}.
+     * @param out the {@code PrintWriter} to print the message to
+     */
     public void print(PrintWriter out) {
         out.print(format());
         out.flush();
     }
 
+    /**
+     * Formats this {@code ErrorMessage} and prints it to the given {@code PrintStream}.
+     * @param out the {@code PrintStream} to print the message to
+     */
     public void print(PrintStream out) {
         out.print(format());
         out.flush();
