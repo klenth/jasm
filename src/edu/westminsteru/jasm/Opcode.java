@@ -26,7 +26,7 @@ enum Opcode {
     bipush(Int),
     caload(),
     castore(),
-    checkcast(ClassName),
+    checkcast(Descriptor),
     d2f(),
     d2i(),
     d2l(),
