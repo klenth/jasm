@@ -131,7 +131,7 @@ enum Opcode {
     iload_3(),
     imul(),
     ineg(),
-    instanceOf(ClassName),
+    instanceOf(Descriptor),
     // invokedynamic
     invokeinterface(ClassName, Identifier, MethodDescriptor),
     invokespecial(ClassName, Identifier, MethodDescriptor),

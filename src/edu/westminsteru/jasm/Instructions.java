@@ -54,7 +54,7 @@ class Instructions {
             // opcodes without arguments whose enum names match method names in CodeBuilder
             case aaload, aastore, areturn, arraylength, athrow,
                  baload, bastore,
-                 caload, castore, checkcast,
+                 caload, castore,
                  d2f, d2i, d2l, dadd, daload, dastore, dcmpg, dcmpl,
                  dconst_0, dconst_1, ddiv, dmul, dneg, drem, dreturn, dsub,
                  dup, dup_x1, dup_x2, dup2, dup2_x1, dup2_x2,
@@ -220,8 +220,9 @@ class Instructions {
             }
 
             case bipush -> cb.bipush(_int(ops[0]));
+            case checkcast -> cb.checkcast(_typeDesc(ops[0]));
             case iinc -> cb.iinc(_int(ops[0]), _int(ops[1]));
-            case instanceOf -> cb.instanceOf(_classDesc(ops[0]));
+            case instanceOf -> cb.instanceOf(_typeDesc(ops[0]));
 
             case multianewarray -> {
                 var desc = _typeDesc(ops[0]);
