@@ -1,0 +1,61 @@
+.interface public abstract Foo
+
+.method public abstract foo ()V
+
+
+.class public Bar
+.super java/lang/Object
+.implements Foo
+
+.method public <init> ()V
+.code
+    aload_0
+    invokespecial java/lang/Object <init> ()V
+    return
+.end code
+
+.method public foo ()V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Bar.foo()"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    return
+.end code
+
+
+.class public Baz
+.super java/lang/Object
+.implements Foo
+
+.method public <init> ()V
+.code
+    aload_0
+    invokespecial java/lang/Object <init> ()V
+    return
+.end code
+
+.method public foo ()V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Baz.foo()"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    return
+.end code
+
+
+.class public FooTest
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    new Bar
+    dup
+    invokespecial Bar <init> ()V
+    invokeinterface Foo foo ()V
+
+    new Baz
+    dup
+    invokespecial Baz <init> ()V
+    invokeinterface Foo foo ()V
+
+    return
+.end code

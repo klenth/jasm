@@ -1,0 +1,65 @@
+.class public abstract Animal
+.super java/lang/Object
+
+.method public <init> ()V
+.code
+    aload_0
+    invokespecial java/lang/Object <init> ()V
+    return
+.end code
+
+.method public abstract makeNoise ()V
+
+
+.class public Cow
+.super Animal
+
+.method public <init> ()V
+.code
+    aload_0
+    invokespecial Animal <init> ()V
+    return
+.end code
+
+.method public makeNoise ()V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Moo!"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    return
+.end code
+
+
+.class public Sheep
+.super Animal
+
+.method public <init> ()V
+.code
+    aload_0
+    invokespecial Animal <init> ()V
+    return
+.end code
+
+.method public makeNoise ()V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    ldc "Baa!"
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    return
+.end code
+
+
+.class public AnimalTest
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    new Cow
+    dup
+    invokespecial Cow <init> ()V
+    invokevirtual Animal makeNoise ()V
+    new Sheep
+    dup
+    invokespecial Sheep <init> ()V
+    invokevirtual Animal makeNoise ()V
+    return
+.end code

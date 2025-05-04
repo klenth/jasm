@@ -44,6 +44,8 @@ public class Flags {
             case "varargs" -> ClassFile.ACC_VARARGS;
             case "native" -> ClassFile.ACC_NATIVE;
             case "strict" -> ClassFile.ACC_STRICT;
+            case "annotation" -> ClassFile.ACC_ANNOTATION;
+            case "module" -> ClassFile.ACC_MODULE;
 
             default -> throw new IllegalArgumentException("Unknown flag: " + flag);
         };

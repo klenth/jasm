@@ -61,25 +61,26 @@ Options:
                 </div>
 
                 <div class="card">
-                    <div class="title">jasm code</div>
+                    <div class="title">Example</div>
 
                     <p>
                         Following is an example of a "hello, world" program in jasm demonstrating the most important features of the assembler.
                     </p>
                     <pre class="indented highlight" data-language="jasm">
-# Flags and name of class
+# Flags and name of class (required)
 .class public HelloJasmWorld
 
 # Source file (optional)
 .source HelloJasmWorld.jasm
 
-# Superclass
+# Superclass (optional)
 .super java/lang/Object
 
 # Field declaration (flags, name, descriptor)
 .field private static final MESSAGE Ljava/lang/String;
 
 # Method (flags, name, descriptor, then code)
+# (&lt;clinit&gt; method - initialization of static fields)
 .method static &lt;clinit&gt; ()V
 .code
     ldc "Hello, jasm world!"
@@ -87,6 +88,7 @@ Options:
     return
 .end code
 
+# main method
 .method public static main ([Ljava/lang/String;)V
 .code
     getstatic java/lang/System out Ljava/io/PrintStream;
@@ -95,10 +97,51 @@ Options:
     return
 .end code
                     </pre>
+                    <p>
+                        This corresponds to the Java code
+                    </p>
+                    <pre class="indented highlight" data-language="java">
+public class HelloJasmWorld {
+    private static final String MESSAGE = "Hello, jasm world!";
+
+    public static void main(String[] args) {
+        System.out.println(MESSAGE);
+    }
+}
+                    </pre>
+
+                    <p>
+                        When run through jasm, this will generate <code>HelloJasmWorld.class</code> that can be run as usual for a Java program (e.g. <code>java HelloJasmWorld</code>).
+                    </p>
+
                 </div>
+
+                <div class="card">
+                    <div class="title">Further information</div>
+
+                    <p>
+                        For further information on the syntax and semantics of jasm code, see the following.
+                    </p>
+
+                    <dl>
+                        <dt><a href="directives.html">Directives</a></dt>
+                        <dd>Directives supported by jasm: <code>.class</code>, <code>.method</code>, etc.</dd>
+
+                        <dt><a href="instructions.html">Instructions</a></dt>
+                        <dd>JVM instructions and jasm syntax for them</dd>
+
+                        <dt><a href="descriptors.html">Descriptors</a></dt>
+                        <dd>Type and method descriptors</dd>
+
+                        <dt><a href="unsupported.html">Unsupported</a></dt>
+                        <dd>JVM instructions and classfile features not supported by jasm</dd>
+                    </dl>
+                </div>
+
             </div>
+
         </main>
-                
+
         <script src="docs.js"></script>
         <script src="highlighting.js"></script>
     </body>

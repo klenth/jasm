@@ -5,13 +5,13 @@
 .source HelloJasmWorld.jasm
 
 # Superclass
-.super java/lang/Object
+.super java/io/PrintStream
 
 # Field declaration (flags, name, descriptor)
 .field private static final MESSAGE Ljava/lang/String;
 
 # Method (flags, name, descriptor, then code)
-.method static <clinit> ()V
+.method static <coinit> ()V
 .code
     ldc "Hello, jasm world!"
     putstatic HelloJasmWorld MESSAGE Ljava/lang/String;

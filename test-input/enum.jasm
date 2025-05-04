@@ -1,0 +1,71 @@
+.class public final Suit
+.super java/lang/Enum
+
+.field public static final CLUBS LSuit;
+.field public static final HEARTS LSuit;
+.field public static final DIAMONDS LSuit;
+.field public static final SPADES LSuit;
+
+.method private static <clinit> ()V
+.code
+    new Suit
+    dup
+    ldc "CLUBS"
+    iconst_0
+    invokespecial Suit <init> (Ljava/lang/String;I)V
+    putstatic Suit CLUBS LSuit;
+
+    new Suit
+    dup
+    ldc "HEARTS"
+    iconst_1
+    invokespecial Suit <init> (Ljava/lang/String;I)V
+    putstatic Suit HEARTS LSuit;
+
+    new Suit
+    dup
+    ldc "DIAMONDS"
+    iconst_2
+    invokespecial Suit <init> (Ljava/lang/String;I)V
+    putstatic Suit DIAMONDS LSuit;
+
+    new Suit
+    dup
+    ldc "SPADES"
+    iconst_3
+    invokespecial Suit <init> (Ljava/lang/String;I)V
+    putstatic Suit SPADES LSuit;
+
+    return
+.end code
+
+.method private <init> (Ljava/lang/String;I)V
+.code
+    aload_0
+    aload_1
+    iload_2
+    invokespecial java/lang/Enum <init> (Ljava/lang/String;I)V
+    return
+.end code
+
+.method private static printValue (LSuit;)V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    aload_0
+    invokevirtual java/io/PrintStream println (Ljava/lang/Object;)V
+    return
+.end code
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    getstatic Suit CLUBS LSuit;
+    invokestatic Suit printValue (LSuit;)V
+    getstatic Suit HEARTS LSuit;
+    invokestatic Suit printValue (LSuit;)V
+    getstatic Suit DIAMONDS LSuit;
+    invokestatic Suit printValue (LSuit;)V
+    getstatic Suit SPADES LSuit;
+    invokestatic Suit printValue (LSuit;)V
+
+    return
+.end code
