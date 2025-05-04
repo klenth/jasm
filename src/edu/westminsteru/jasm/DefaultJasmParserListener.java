@@ -132,7 +132,7 @@ class DefaultJasmParserListener implements JasmParserListener {
                 ".end code directive not expected here", parser.getCurrentLine(),
                 parser.getCurrentLineNumber(), ErrorMessage.UNSPECIFIC
             ));
-        else {
+        else if (!methods.isEmpty()) {
             methodCodes.put(methods.getLast(), new MethodCode(currentMethodCodeItems));
             currentMethodCodeItems = null;
         }

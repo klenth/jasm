@@ -1,0 +1,27 @@
+# Flags and name of class
+.class public HelloJasmWorld
+
+# Source file (optional)
+.source HelloJasmWorld.jasm
+
+# Superclass
+.super java/lang/Object
+
+# Field declaration (flags, name, descriptor)
+.field private static final MESSAGE Ljava/lang/String;
+
+# Method (flags, name, descriptor, then code)
+.method static <clinit> ()V
+.code
+    ldc "Hello, jasm world!"
+    putstatic HelloJasmWorld MESSAGE Ljava/lang/String;
+    return
+.end code
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    getstatic HelloJasmWorld MESSAGE Ljava/lang/String;
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    return
+.end code

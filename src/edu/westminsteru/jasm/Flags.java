@@ -32,8 +32,8 @@ public class Flags {
             case "protected" -> ClassFile.ACC_PROTECTED;
             case "private" -> ClassFile.ACC_PRIVATE;
 
-            case "final" -> ClassFile.ACC_PROTECTED;
-            case "abstract" -> ClassFile.ACC_PRIVATE;
+            case "final" -> ClassFile.ACC_FINAL;
+            case "abstract" -> ClassFile.ACC_ABSTRACT;
             case "synthetic" -> ClassFile.ACC_SYNTHETIC;
             case "static" -> ClassFile.ACC_STATIC;
             case "volatile" -> ClassFile.ACC_VOLATILE;

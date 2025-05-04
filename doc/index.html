@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <title>jasm: a Java Virtual Machine assembler</title>
         <link rel="stylesheet" href="docs.css">
+        <link rel="stylesheet" href="highlighting.css">
     </head>
 
     <body>
@@ -42,10 +43,63 @@
                     <p>
                         For full details on the available classes and their methods, see the <a href="api/">API documentation</a>.
                     </p>
+
+                    <h2>Command-line interface</h2>
+                    <p>
+                        jasm includes a command-line interface in <code>edu.westminsteru.jasm.Main</code>.
+                    </p>
+                    <pre class="indented">
+Usage: java edu.westminsteru.jasm.Main [options] filename
+
+Options:
+    -h      Show this help message
+    -d dir  Save output in the given directory
+                    </pre>
+                    <p>
+                        Any classes defined in the input file will be assembled into .class files and placed in the given directory (if not specified, the current directory). Any classes in packages will have nested subdirectories created as needed (e.g. <code>.class public some/package/name/ClassName</code> will be assembled to <code><em>&lt;output directory&gt;</em>/some/package/name/ClassName.class</code>).
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="title">jasm code</div>
+
+                    <p>
+                        Following is an example of a "hello, world" program in jasm demonstrating the most important features of the assembler.
+                    </p>
+                    <pre class="indented highlight" data-language="jasm">
+# Flags and name of class
+.class public HelloJasmWorld
+
+# Source file (optional)
+.source HelloJasmWorld.jasm
+
+# Superclass
+.super java/lang/Object
+
+# Field declaration (flags, name, descriptor)
+.field private static final MESSAGE Ljava/lang/String;
+
+# Method (flags, name, descriptor, then code)
+.method static &lt;clinit&gt; ()V
+.code
+    ldc "Hello, jasm world!"
+    putstatic HelloJasmWorld MESSAGE Ljava/lang/String;
+    return
+.end code
+
+.method public static main ([Ljava/lang/String;)V
+.code
+    getstatic java/lang/System out Ljava/io/PrintStream;
+    getstatic HelloJasmWorld MESSAGE Ljava/lang/String;
+    invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+    return
+.end code
+                    </pre>
                 </div>
             </div>
         </main>
                 
         <script src="docs.js"></script>
+        <script src="highlighting.js"></script>
     </body>
 </html>

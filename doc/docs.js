@@ -34,8 +34,8 @@
     
     // Insert an anchor before each problem, and if there is a problem links ul,
     // add a link to it
-    const problem_titles = document.querySelectorAll(".problems > .problem > .title");
-    const nav_ul = document.querySelector("ul.problem-links");
+    const problem_titles = document.querySelectorAll(".cards > .card > .title");
+    const nav_ul = document.querySelector("ul.card-links");
     let problem_number = 0;
     for (let i = 0; i < problem_titles.length; ++i) {
         const problem_title = problem_titles[i];
@@ -72,14 +72,14 @@
     
     // Watch document scrolls and highlight the link to the current
     // problem
-    const problems = document.querySelectorAll(".problems > .problem");
+    const problems = document.querySelectorAll(".cards > .card");
     
     // Since some problems don't have links, we need to keep track of the mapping between problem index and link index!
     const problem_link_index_map = [ 0 ];
     
     let link_index = 1;
     
-    for (let problem of document.querySelectorAll(".problems > .problem")) {
+    for (let problem of document.querySelectorAll(".cards > .card")) {
         problem_link_index_map.push(link_index);
         if (problem.querySelector(".title"))
             ++link_index;
@@ -151,7 +151,7 @@
     if (homework_total_points_box) {
         let homework_total_points = 0;
         const points_pattern = /^\s*(\d+)\s+points?\s*$/i;
-        for (let problem_total_points of document.querySelectorAll(".problem .total.points")) {
+        for (let problem_total_points of document.querySelectorAll(".card .total.points")) {
             const match = points_pattern.exec(problem_total_points.innerText);
             if (match)
                 homework_total_points += parseInt(match[1]);
@@ -162,14 +162,14 @@
 
     if (plain_mode) {
         let problem_counter = 1;
-        for (let problem_title of document.querySelectorAll(".problems > .problem > .title")) {
+        for (let problem_title of document.querySelectorAll(".cards > .card > .title")) {
             if (problem_title.classList.contains("auto-number")) {
                 problem_title.innerText = "Problem " + problem_counter;
                 ++problem_counter;
             }
         }
         
-        for (let point of document.querySelectorAll(".problem .points:not(.total)")) {
+        for (let point of document.querySelectorAll(".card .points:not(.total)")) {
             point.innerText = "(" + point.innerText + " points)";
         }
     }

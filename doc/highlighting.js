@@ -12,6 +12,12 @@
             "number": /\b[\+\-]?((\d+)|(\d+\.\d*)|(\d*\.\d+))([eE]([\+\-]?)\d+)?\b/g,
         },
 
+        "jasm": {
+            "line-comment": /#[^\n\r$]*[\n\r$]/g,
+            "string": /"((\\")|([^"]))*"/g,
+            "keyword": /(\.class|\.interface|\.enum|\.source|\.super|\.field|\.method|\.code|\.end code|\.table|\.end table)/g,
+        },
+
         "pascal": {
             "block-comment": /\(\*([^*)]|\*[^)]|[^*]\))*\*\)/sg,
             "string": /'(('')|[^'])*'/g,
