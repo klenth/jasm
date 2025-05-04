@@ -1,0 +1,31 @@
+.highlight>.keyword {
+    color: #941edf;
+}
+
+.highlight>.type {
+    color: #941edf;
+}
+
+.highlight>.number {
+    color: var(--color-flint);
+}
+
+.highlight>.string {
+    color: #00a000;
+}
+
+.highlight>.line-comment, .highlight>.block-comment {
+    color: #e65d00;
+}
+
+html.dark-mode .highlight>.keyword {
+    color: var(--color-thistle);
+}
+
+html.dark-mode .highlight>.type {
+    color: var(--color-thistle);
+}
+
+html.dark-mode .highlight>.number {
+    color: var(--color-birch);
+}
