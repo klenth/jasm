@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr" class="fancy">
+    <head>
+        <meta charset="utf-8">
+        <title>jasm: a Java Virtual Machine assembler</title>
+        <link rel="stylesheet" href="docs.css">
+        <link rel="stylesheet" href="highlighting.css">
+        <style>
+table.instruction-usage tbody td {
+    font-family: 'Iosevka Kathy Extended', monospace;
+}
+
+table.instruction-usage tbody tr:nth-child(2n) td {
+    background-color: #eee;
+}
+
+.dark-mode table.instruction-usage tbody tr:nth-child(2n) td {
+    background-color: #222;
+}
+
+table.instruction-usage tbody td {
+    min-width: 256px;
+}
+
+.pip {
+    display: inline-block;
+    padding: 2px 4px;
+    background-color: var(--color-for-chrome);
+    color: var(--color-for-content-background);
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-right: 2px;
+}
+        </style>
+    </head>
+
+    <body>
+
+        <nav>
+            <ul class="card-links"></ul>
+            <div class="icon"></div>
+            <div class="plain-link"><a href="?plain">Printable version</a></div>
+            <span class="dark-mode-toggle" title="Toggle dark mode"></span>
+        </nav>
+        
+        <main class="justified">
+            <div class="title-card">
+                <h1>jasm instructions</h1>
+
+                <p>
+                    jasm supports most instructions of the Java Virtual Machine.
+                </p>
+
+                <h2>The stack</h2>
+                <p>
+                    The Java Virtual Machine is stack-based, meaning there is a stack that most instructions affect in one way or another.  In this page, how an instruction affects the stack is shown
+                </p>
+            </div>
+        
+            <div class="cards">
+                <div class="card">
+                    <div class="title">Loads and stores</div>
+
+                    <h2>Loads</h2>
+                    <table class="instruction-usage">
+                        <thead>
+                        <tr>
+                            <th scope="col">Syntax</th>
+                            <th scope="col">Stack before</th>
+                            <th scope="col">Stack after</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr>
+                            <td>iload <span class="pip">int</span><em>index</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>dload <span class="pip">int</span><em>index</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">double</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>fload <span class="pip">int</span><em>index</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>lload <span class="pip">int</span><em>index</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">long</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>aload <span class="pip">int</span><em>index</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">ref</span><em>value</em> →</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <p>
+                        The <code>_load</code> family of instructions loads the value of a local variable, pushing it onto the stack. <code><em>index</em></code> is an index in the local variable table.
+                    </p>
+                    <p>
+                        The JVM defines special versions of each of the above for the first three variable slots: <code>iload_2</code> does the same as <code>iload 2</code>, for example (but requires half as much memory in the bytecode). jasm automatically selects the “shortcut” version of the instruction if applicable, so it is not necessary to explicitly use them (jasm assembles <code>iload 2</code> as <code>iload_2</code>).
+                    </p>
+
+                    <h2>Stores</h2>
+                    <table class="instruction-usage">
+                        <thead>
+                        <tr>
+                            <th scope="col">Syntax</th>
+                            <th scope="col">Stack before</th>
+                            <th scope="col">Stack after</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr>
+                            <td>istore <span class="pip">int</span><em>index</em></td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>dstore <span class="pip">int</span><em>index</em></td>
+                            <td>… <span class="pip">double</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>fstore <span class="pip">int</span><em>index</em></td>
+                            <td>… <span class="pip">float</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>lstore <span class="pip">int</span><em>index</em></td>
+                            <td>… <span class="pip">long</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>astore <span class="pip">int</span><em>index</em></td>
+                            <td>… <span class="pip">ref</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <p>
+                        The <code>_store</code> instructions are the inverse of the <code>_load</code> family, popping a value off the stack to store in a local variable.
+                    </p>
+                    <p>
+                        Similar to the <code>_load</code> instructions, there are “shortcut” versions for indexes up to 3 (<code>astore_3</code> does the same as <code>astore 3</code>), but jasm automatically selects the shortcut version if applicable.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="title">Array loads and stores</div>
+
+                    <h2>Array loads</h2>
+                    <table class="instruction-usage">
+                        <thead>
+                        <tr>
+                            <th scope="col">Syntax</th>
+                            <th scope="col">Stack before</th>
+                            <th scope="col">Stack after</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr>
+                            <td>iaload</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em> →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>daload</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em> →</td>
+                            <td>… <span class="pip">double</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>faload</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em> →</td>
+                            <td>… <span class="pip">float</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>laload</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em> →</td>
+                            <td>… <span class="pip">long</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>baload</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em> →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>caload</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em> →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>saload</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em> →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>aaload</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em> →</td>
+                            <td>… <span class="pip">ref</span><em>value</em> →</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <p>
+                        The <code>_aload</code> instructions load a value from an array. In all cases, the stack must hold a reference to the array being loaded from and then an (integer) index; afterward, the value loaded is pushed onto the stack. Note that these instructions are different from the <code>_load</code> family in that the index is on the stack instead of being an operand to the instruction.
+                    </p>
+
+                    <h2>Array stores</h2>
+                    <table class="instruction-usage">
+                        <thead>
+                        <tr>
+                            <th scope="col">Syntax</th>
+                            <th scope="col">Stack before</th>
+                            <th scope="col">Stack after</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr>
+                            <td>iastore</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em>
+                                <span class="pip">int</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>dastore</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em>
+                                <span class="pip">double</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>fastore</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em>
+                                <span class="pip">float</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>lastore</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em>
+                                <span class="pip">long</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>bastore</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em>
+                                <span class="pip">int</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>castore</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em>
+                                <span class="pip">int</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>sastore</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em>
+                                <span class="pip">int</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        <tr>
+                            <td>aastore</td>
+                            <td>…
+                                <span class="pip">ref</span><em>array</em>
+                                <span class="pip">int</span><em>index</em>
+                                <span class="pip">ref</span><em>value</em> →</td>
+                            <td>… →</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <p>
+                        The <code>_astore</code> instructions are the counterparts of the <code>_aload</code> instruction series. The stack must hold an array reference, an index, and the value to be stored in the array, and nothing is pushed onto the stack.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="title">Constant value instructions</div>
+
+                    <table class="instruction-usage">
+                        <thead>
+                        <tr>
+                            <th scope="col">Syntax</th>
+                            <th scope="col">Stack before</th>
+                            <th scope="col">Stack after</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr>
+                            <td>iconst_0</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>0 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>1 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_2</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>2 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_3</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>3 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_4</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>4 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_5</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>5 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_m1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>-1 →</td>
+                        </tr>
+                        <tr>
+                            <td>dconst_0</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">double</span>0 →</td>
+                        </tr>
+                        <tr>
+                            <td>dconst_1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">double</span>1 →</td>
+                        </tr>
+                        <tr>
+                            <td>fconst_0</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span>0 →</td>
+                        </tr>
+                        <tr>
+                            <td>fconst_1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span>1 →</td>
+                        </tr>
+                        <tr>
+                            <td>fconst_2</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span>2 →</td>
+                        </tr>
+                        <tr>
+                            <td>lconst_0</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">long</span>0 →</td>
+                        </tr>
+                        <tr>
+                            <td>lconst_1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">long</span>1 →</td>
+                        </tr>
+                        <tr>
+                            <td>aconst_null</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">ref</span>null →</td>
+                        </tr>
+                        <tr>
+                            <td>bipush <span class="pip">int</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>sipush <span class="pip">int</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc <span class="pip">int</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc <span class="pip">float</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc <span class="pip">string</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">ref</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc2 <span class="pip">double</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">double</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc2 <span class="pip">long</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">long</span><em>value</em> →</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <p>
+                        These instructions push a specific value on the stack.
+                    </p>
+                    <ul>
+                        <li>The <code>_const__</code> instructions push a fixed value on the stack.</li>
+                        <li><code>bipush</code> pushes an integer encodable as a <code>byte</code> — that is, one in the range -128…+127 — onto the stack.</li>
+                        <li><code>sipush</code> pushes an integer encodable as a <code>short</code> — that is, one in the range -65,536…+65,535 — onto the stack.</li>
+                        <li><code>ldc</code> and <code>ldc2</code> can load any value of type <code>int</code>, <code>float</code>, <code>String</code>, <code>double</code>, or <code>long</code> onto the stack.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="title">Stack manipulation instructions</div>
+
+                    <h2><code>dup</code> instructions</h2>
+                    <table class="instruction-usage">
+                        <thead>
+                        <tr>
+                            <th scope="col">Syntax</th>
+                            <th scope="col">Stack before</th>
+                            <th scope="col">Stack after</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr>
+                            <td>dup</td>
+                            <td>… <em>value</em> →</td>
+                            <td>… <em>value</em> <em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>dup_x1</td>
+                            <td>… <em>value2</em> <em>value1</em> →</td>
+                            <td>… <em>value1</em> <em>value2</em> <em>value1</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_2</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>2 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_3</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>3 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_4</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>4 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_5</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>5 →</td>
+                        </tr>
+                        <tr>
+                            <td>iconst_m1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span>-1 →</td>
+                        </tr>
+                        <tr>
+                            <td>dconst_0</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">double</span>0 →</td>
+                        </tr>
+                        <tr>
+                            <td>dconst_1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">double</span>1 →</td>
+                        </tr>
+                        <tr>
+                            <td>fconst_0</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span>0 →</td>
+                        </tr>
+                        <tr>
+                            <td>fconst_1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span>1 →</td>
+                        </tr>
+                        <tr>
+                            <td>fconst_2</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span>2 →</td>
+                        </tr>
+                        <tr>
+                            <td>lconst_0</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">long</span>0 →</td>
+                        </tr>
+                        <tr>
+                            <td>lconst_1</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">long</span>1 →</td>
+                        </tr>
+                        <tr>
+                            <td>aconst_null</td>
+                            <td>… →</td>
+                            <td>… <span class="pip">ref</span>null →</td>
+                        </tr>
+                        <tr>
+                            <td>bipush <span class="pip">int</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>sipush <span class="pip">int</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc <span class="pip">int</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">int</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc <span class="pip">float</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">float</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc <span class="pip">string</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">ref</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc2 <span class="pip">double</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">double</span><em>value</em> →</td>
+                        </tr>
+                        <tr>
+                            <td>ldc2 <span class="pip">long</span><em>value</em></td>
+                            <td>… →</td>
+                            <td>… <span class="pip">long</span><em>value</em> →</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </main>
+        
+        <script src="docs.js"></script>
+        <script src="highlighting.js"></script>
+    </body>
+</html>
