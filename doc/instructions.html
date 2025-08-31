@@ -6,6 +6,15 @@
         <link rel="stylesheet" href="docs.css">
         <link rel="stylesheet" href="highlighting.css">
         <style>
+.instruction-list {
+    white-space: pre-line;
+    font-family: 'Iosevka Kathy Extended', monospace;
+
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
 table.instruction-usage tbody td {
     font-family: 'Iosevka Kathy Extended', monospace;
 }
@@ -49,535 +58,509 @@ table.instruction-usage tbody td {
                 <h1>jasm instructions</h1>
 
                 <p>
-                    jasm supports most instructions of the Java Virtual Machine.
+                    jasm supports most instructions of the Java Virtual Machine. This page documents the syntax used for invoking these instructions; please see the current <a href="https://docs.oracle.com/javase/specs/jvms/se24/html/jvms-6.html#jvms-6.5">Java Virtual Machine Specification</a> for details on what the instructions do.
                 </p>
 
-                <h2>The stack</h2>
                 <p>
-                    The Java Virtual Machine is stack-based, meaning there is a stack that most instructions affect in one way or another.  In this page, how an instruction affects the stack is shown
+                    This page is organized by the operands taken by the instructions.
                 </p>
+
             </div>
         
             <div class="cards">
                 <div class="card">
-                    <div class="title">Loads and stores</div>
-
-                    <h2>Loads</h2>
-                    <table class="instruction-usage">
-                        <thead>
-                        <tr>
-                            <th scope="col">Syntax</th>
-                            <th scope="col">Stack before</th>
-                            <th scope="col">Stack after</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        <tr>
-                            <td>iload <span class="pip">int</span><em>index</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>dload <span class="pip">int</span><em>index</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">double</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>fload <span class="pip">int</span><em>index</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>lload <span class="pip">int</span><em>index</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">long</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>aload <span class="pip">int</span><em>index</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">ref</span><em>value</em> →</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="title">Instructions without operands</div>
 
                     <p>
-                        The <code>_load</code> family of instructions loads the value of a local variable, pushing it onto the stack. <code><em>index</em></code> is an index in the local variable table.
-                    </p>
-                    <p>
-                        The JVM defines special versions of each of the above for the first three variable slots: <code>iload_2</code> does the same as <code>iload 2</code>, for example (but requires half as much memory in the bytecode). jasm automatically selects the “shortcut” version of the instruction if applicable, so it is not necessary to explicitly use them (jasm assembles <code>iload 2</code> as <code>iload_2</code>).
+                        The following instructions take no operands, so they can be written as-is.
                     </p>
 
-                    <h2>Stores</h2>
-                    <table class="instruction-usage">
-                        <thead>
-                        <tr>
-                            <th scope="col">Syntax</th>
-                            <th scope="col">Stack before</th>
-                            <th scope="col">Stack after</th>
-                        </tr>
-                        </thead>
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">aaload
+                        aastore
+                        aconst_null
+                        aload_0
+                        aload_1
+                        aload_2
+                        aload_3
+                        areturn
+                        arraylength
+                        astore_0
+                        astore_1
+                        astore_2
+                        astore_3
+                        athrow
+                        baload
+                        bastore
+                        caload
+                        castore
+                        d2f
+                        d2i
+                        d2l
+                        dadd
+                        daload
+                        dastore
+                        dcmpg
+                        dcmpl
+                        dconst_0
+                        dconst_1
+                        ddiv
+                        dload_0
+                        dload_1
+                        dload_2
+                        dload_3
+                        dmul
+                        dneg
+                        drem
+                        dreturn
+                        dstore_0
+                        dstore_1
+                        dstore_2
+                        dstore_3
+                        dsub
+                        dup
+                        dup_x1
+                        dup_x2
+                        dup2
+                        dup2_x1
+                        dup2_x2
+                        f2d
+                        f2i
+                        f2l
+                        fadd
+                        faload
+                        fastore
+                        fcmpg
+                        fcmpl
+                        fconst_0
+                        fconst_1
+                        fconst_2
+                        fdiv
+                        fload_0
+                        fload_1
+                        fload_2
+                        fload_3
+                        fmul
+                        fneg
+                        frem
+                        freturn
+                        fstore_0
+                        fstore_1
+                        fstore_2
+                        fstore_3
+                        fsub
+                        i2b
+                        i2c
+                        i2d
+                        i2f
+                        i2l
+                        i2s
+                        iadd
+                        iaload
+                        iand
+                        iastore
+                        iconst_0
+                        iconst_1
+                        iconst_2
+                        iconst_3
+                        iconst_4
+                        iconst_5
+                        iconst_m1
+                        idiv
+                        iload_0
+                        iload_1
+                        iload_2
+                        iload_3
+                        imul
+                        ineg
+                        ior
+                        irem
+                        ireturn
+                        ishl
+                        ishr
+                        istore_0
+                        istore_1
+                        istore_2
+                        istore_3
+                        isub
+                        iushr
+                        ixor
+                        l2d
+                        l2f
+                        l2i
+                        ladd
+                        laload
+                        land
+                        lastore
+                        lcmp
+                        lconst_0
+                        lconst_1
+                        ldiv
+                        lload_0
+                        lload_1
+                        lload_2
+                        lload_3
+                        lmul
+                        lneg
+                        lor
+                        lrem
+                        lreturn
+                        lshl
+                        lshr
+                        lstore_0
+                        lstore_1
+                        lstore_2
+                        lstore_3
+                        lsub
+                        lushr
+                        lxor
+                        monitorenter
+                        monitorexit
+                        nop
+                        pop
+                        pop2
+                        return
+                        saload
+                        sastore
+                        swap
+                    </div>
 
-                        <tbody>
-                        <tr>
-                            <td>istore <span class="pip">int</span><em>index</em></td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>dstore <span class="pip">int</span><em>index</em></td>
-                            <td>… <span class="pip">double</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>fstore <span class="pip">int</span><em>index</em></td>
-                            <td>… <span class="pip">float</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>lstore <span class="pip">int</span><em>index</em></td>
-                            <td>… <span class="pip">long</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>astore <span class="pip">int</span><em>index</em></td>
-                            <td>… <span class="pip">ref</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="syntax-header">Examples</div>
+                    <pre class="example syntax highlight" data-language="jasm">
+aload_1     # load reference value from local variable 1
+pop         # pop a value from operand stack
+iconst_m1   # push the int value -1 onto the operand stack</pre>
+                </div>
+
+                <div class="card">
+                    <div class="title">Instructions taking an integer operand</div>
 
                     <p>
-                        The <code>_store</code> instructions are the inverse of the <code>_load</code> family, popping a value off the stack to store in a local variable.
+                        These instructions take a single integer value as operand. In some cases there are limitations on the permitted values (e.g. the operand to a <code>*load</code> instruction cannot be negative); please see the Java Virtual Machine Specification for details.
                     </p>
+
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">aload <em>(integer)</em>
+                        astore <em>(integer)</em>
+                        bipush <em>(integer)</em>
+                        dload <em>(integer)</em>
+                        dstore <em>(integer)</em>
+                        fload <em>(integer)</em>
+                        fstore <em>(integer)</em>
+                        iload <em>(integer)</em>
+                        istore <em>(integer)</em>
+                        lload <em>(integer)</em>
+                        lstore <em>(integer)</em>
+                        sipush <em>(integer)</em>
+                    </div>
+
+                    <div class="syntax-header">Examples</div>
+                    <pre class="example syntax highlight" data-language="jasm">
+lload 7     # load the value of long variable 7 onto the stack
+bipush -15  # push the int value -15 onto the stack
+istore 0    # store the int value on top of stack into int variable 0 (same as istore_0)</pre>
+
                     <p>
-                        Similar to the <code>_load</code> instructions, there are “shortcut” versions for indexes up to 3 (<code>astore_3</code> does the same as <code>astore 3</code>), but jasm automatically selects the shortcut version if applicable.
+                        The Java Virtual Machine defines shorter versions of the <code>*load</code> and <code>*store</code> instructions when the operand is 0, 1, 2, or 3: for example, the <code>iload_3</code> instruction has the same effect as <code>iload 3</code> (but uses half as much memory in the bytecode since it has no operand). When possible, jasm automatically transforms these instructions to their shorter versions; e.g., if the input contains <code>iload 3</code>, jasm will emit an <code>iload_3</code> instruction instead.
                     </p>
                 </div>
 
                 <div class="card">
-                    <div class="title">Array loads and stores</div>
-
-                    <h2>Array loads</h2>
-                    <table class="instruction-usage">
-                        <thead>
-                        <tr>
-                            <th scope="col">Syntax</th>
-                            <th scope="col">Stack before</th>
-                            <th scope="col">Stack after</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        <tr>
-                            <td>iaload</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em> →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>daload</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em> →</td>
-                            <td>… <span class="pip">double</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>faload</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em> →</td>
-                            <td>… <span class="pip">float</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>laload</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em> →</td>
-                            <td>… <span class="pip">long</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>baload</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em> →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>caload</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em> →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>saload</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em> →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>aaload</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em> →</td>
-                            <td>… <span class="pip">ref</span><em>value</em> →</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="title">Load constant instructions</div>
 
                     <p>
-                        The <code>_aload</code> instructions load a value from an array. In all cases, the stack must hold a reference to the array being loaded from and then an (integer) index; afterward, the value loaded is pushed onto the stack. Note that these instructions are different from the <code>_load</code> family in that the index is on the stack instead of being an operand to the instruction.
+                        These instructions load a value from the bytecode and push it onto the stack. They differ from other instructions in that their operands can be of multiple different types.
                     </p>
 
-                    <h2>Array stores</h2>
-                    <table class="instruction-usage">
-                        <thead>
-                        <tr>
-                            <th scope="col">Syntax</th>
-                            <th scope="col">Stack before</th>
-                            <th scope="col">Stack after</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        <tr>
-                            <td>iastore</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em>
-                                <span class="pip">int</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>dastore</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em>
-                                <span class="pip">double</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>fastore</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em>
-                                <span class="pip">float</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>lastore</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em>
-                                <span class="pip">long</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>bastore</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em>
-                                <span class="pip">int</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>castore</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em>
-                                <span class="pip">int</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>sastore</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em>
-                                <span class="pip">int</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        <tr>
-                            <td>aastore</td>
-                            <td>…
-                                <span class="pip">ref</span><em>array</em>
-                                <span class="pip">int</span><em>index</em>
-                                <span class="pip">ref</span><em>value</em> →</td>
-                            <td>… →</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">ldc <em>(int value)</em>
+                        ldc <em>(float value)</em>
+                        ldc <em>(String value)</em>
+                        ldc2 <em>(long value)</em>
+                        ldc2 <em>(double value)</em>
+                    </div>
 
                     <p>
-                        The <code>_astore</code> instructions are the counterparts of the <code>_aload</code> instruction series. The stack must hold an array reference, an index, and the value to be stored in the array, and nothing is pushed onto the stack.
-                    </p>
-                </div>
-
-                <div class="card">
-                    <div class="title">Constant value instructions</div>
-
-                    <table class="instruction-usage">
-                        <thead>
-                        <tr>
-                            <th scope="col">Syntax</th>
-                            <th scope="col">Stack before</th>
-                            <th scope="col">Stack after</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        <tr>
-                            <td>iconst_0</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>0 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>1 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_2</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>2 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_3</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>3 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_4</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>4 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_5</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>5 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_m1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>-1 →</td>
-                        </tr>
-                        <tr>
-                            <td>dconst_0</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">double</span>0 →</td>
-                        </tr>
-                        <tr>
-                            <td>dconst_1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">double</span>1 →</td>
-                        </tr>
-                        <tr>
-                            <td>fconst_0</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span>0 →</td>
-                        </tr>
-                        <tr>
-                            <td>fconst_1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span>1 →</td>
-                        </tr>
-                        <tr>
-                            <td>fconst_2</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span>2 →</td>
-                        </tr>
-                        <tr>
-                            <td>lconst_0</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">long</span>0 →</td>
-                        </tr>
-                        <tr>
-                            <td>lconst_1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">long</span>1 →</td>
-                        </tr>
-                        <tr>
-                            <td>aconst_null</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">ref</span>null →</td>
-                        </tr>
-                        <tr>
-                            <td>bipush <span class="pip">int</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>sipush <span class="pip">int</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc <span class="pip">int</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc <span class="pip">float</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc <span class="pip">string</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">ref</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc2 <span class="pip">double</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">double</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc2 <span class="pip">long</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">long</span><em>value</em> →</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <p>
-                        These instructions push a specific value on the stack.
+                        In these instructions, the operands have the following meanings:
                     </p>
                     <ul>
-                        <li>The <code>_const__</code> instructions push a fixed value on the stack.</li>
-                        <li><code>bipush</code> pushes an integer encodable as a <code>byte</code> — that is, one in the range -128…+127 — onto the stack.</li>
-                        <li><code>sipush</code> pushes an integer encodable as a <code>short</code> — that is, one in the range -65,536…+65,535 — onto the stack.</li>
-                        <li><code>ldc</code> and <code>ldc2</code> can load any value of type <code>int</code>, <code>float</code>, <code>String</code>, <code>double</code>, or <code>long</code> onto the stack.</li>
+                        <li><em>Int value:</em> an int value. jasm accepts integers in either decimal form (such as <code>123</code>) or hexadecimal (<code>0x1234abcd</code>).</li>
+                        <li>
+                            <em>Float value:</em> a float value; possible forms include
+                            <ul>
+                                <li><em>normal form: </em> <code>1.23f</code>;</li>
+                                <li><em>exponential form: </em> <code>1.23e-5f</code>;</li>
+                                <li><em>bits form: </em> <code>0x80000000fb</code>.</li>
+                            </ul>
+                        </li>
+                        <li><em>String value:</em> a String value enclosed in double quotes <code>" "</code>. Java-style escape sequences (<code>\n</code>, <code>\"</code>, <code>\u103e</code>) are supported.</li>
+                        <li><em>Long value:</em> a long value in either decimal form (such as <code>123L</code>) or hexadecimal (<code>0x12341234abcdabcdL</code>).</li>
+                        <li>
+                            <em>Double value:</em> a double value; possible forms include
+                            <ul>
+                                <li><em>normal form: </em> <code>1.23</code>;</li>
+                                <li><em>exponential form: </em> <code>1.23e-5</code>;</li>
+                                <li><em>bits form: </em> <code>0x8000000000000000db</code>.</li>
+                            </ul>
+                        </li>
                     </ul>
+
+                    <div class="syntax-header">Examples</div>
+                    <pre class="example syntax highlight" data-language="jasm">ldc -100
+ldc +3e8f
+ldc "stop trying to make \"fetch\" happen"
+ldc2 1000000000000L
+ldc2 3.141592653</pre>
+
+                    <p>
+                        <strong>Note:</strong> the Java Virtual Machine additionally allows class types, method types, and method handles as operands for <code>ldc</code>. These are not supported by jasm.
+                    </p>
+
                 </div>
 
                 <div class="card">
-                    <div class="title">Stack manipulation instructions</div>
+                    <div class="title">Field access instructions</div>
 
-                    <h2><code>dup</code> instructions</h2>
-                    <table class="instruction-usage">
-                        <thead>
-                        <tr>
-                            <th scope="col">Syntax</th>
-                            <th scope="col">Stack before</th>
-                            <th scope="col">Stack after</th>
-                        </tr>
-                        </thead>
+                    <p>
+                        These instructions get or put the value of a static or nonstatic field.
+                    </p>
 
-                        <tbody>
-                        <tr>
-                            <td>dup</td>
-                            <td>… <em>value</em> →</td>
-                            <td>… <em>value</em> <em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>dup_x1</td>
-                            <td>… <em>value2</em> <em>value1</em> →</td>
-                            <td>… <em>value1</em> <em>value2</em> <em>value1</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_2</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>2 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_3</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>3 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_4</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>4 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_5</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>5 →</td>
-                        </tr>
-                        <tr>
-                            <td>iconst_m1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span>-1 →</td>
-                        </tr>
-                        <tr>
-                            <td>dconst_0</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">double</span>0 →</td>
-                        </tr>
-                        <tr>
-                            <td>dconst_1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">double</span>1 →</td>
-                        </tr>
-                        <tr>
-                            <td>fconst_0</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span>0 →</td>
-                        </tr>
-                        <tr>
-                            <td>fconst_1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span>1 →</td>
-                        </tr>
-                        <tr>
-                            <td>fconst_2</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span>2 →</td>
-                        </tr>
-                        <tr>
-                            <td>lconst_0</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">long</span>0 →</td>
-                        </tr>
-                        <tr>
-                            <td>lconst_1</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">long</span>1 →</td>
-                        </tr>
-                        <tr>
-                            <td>aconst_null</td>
-                            <td>… →</td>
-                            <td>… <span class="pip">ref</span>null →</td>
-                        </tr>
-                        <tr>
-                            <td>bipush <span class="pip">int</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>sipush <span class="pip">int</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc <span class="pip">int</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">int</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc <span class="pip">float</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">float</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc <span class="pip">string</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">ref</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc2 <span class="pip">double</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">double</span><em>value</em> →</td>
-                        </tr>
-                        <tr>
-                            <td>ldc2 <span class="pip">long</span><em>value</em></td>
-                            <td>… →</td>
-                            <td>… <span class="pip">long</span><em>value</em> →</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">getfield <em>(class name) (field name) (type descriptor)</em>
+                        getstatic <em>(class name) (field name) (type descriptor)</em>
+                        putfield <em>(class name) (field name) (type descriptor)</em>
+                        putstatic <em>(class name) (field name) (type descriptor)</em>
+                    </div>
 
+                    <p>
+                        In these instructions, the operands have the following meanings:
+                    </p>
+                    <ul>
+                        <li><em>Class name:</em> the name of the class in internal form (using <code>/</code> instead of <code>.</code> to separate packages) that declares the field</li>
+                        <li><em>Field name:</em> the name of the field to get or put</li>
+                        <li><em>Type descriptor:</em> a <a href="descriptors.html#type-descriptors">type descriptor</a> describing the type of the field being get or put</li>
+                    </ul>
+
+                    <div class="syntax-header">Examples</div>
+                    <pre class="example syntax highlight" data-language="jasm">getstatic java/lang/System out Ljava/io/PrintStream; # get the value of System.out and put it on the stack
+
+# Some code you might have in the constructor (&lt;init&gt; method) of a Badger class:
+aload_0                                 # load _this_
+aload_1                                 # load the value of reference variable 1
+putfield Badger name Ljava/lang/String; # assign a value to the _name_ instance variable</pre>
+                </div>
+
+                <div class="card">
+                    <div class="title">Method call instructions</div>
+
+                    <p>
+                        These instructions call various kinds of methods.
+                    </p>
+
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">invokeinterface <em>(class name) (method name) (method descriptor)</em>
+                        invokespecial <em>(class name) (method name) (method descriptor)</em>
+                        invokestatic <em>(class name) (method name) (method descriptor)</em>
+                        invokevirtual <em>(class name) (method name) (method descriptor)</em>
+                    </div>
+
+                    <p>
+                        In these instructions, the operands have the following meanings:
+                    </p>
+                    <ul>
+                        <li><em>Class name:</em> the name of the class or interface in internal form (using <code>/</code> instead of <code>.</code> to separate packages) that declares the method</li>
+                        <li><em>Method name:</em> the name of the method to call</li>
+                        <li><em>Method descriptor:</em> a <a href="descriptors.html#method-descriptors">method descriptor</a> describing the method to call</li>
+                    </ul>
+
+                    <div class="syntax-header">Examples</div>
+                    <pre class="example syntax highlight" data-language="jasm"># Call superclass (Object) constructor:
+aload_0                                   # load _this_
+invokespecial java/lang/Object &lt;init&gt; ()V # invoke Object's &lt;init&gt; method
+
+# Print a message:
+getstatic java/lang/System out Ljava/io/PrintStream;            # load java.lang.System.out
+ldc "Hello, world!"                                             # load the String argument
+invokevirtual java/io/PrintStream println (Ljava/lang/String;)V # call the println(String) method
+</pre>
+                </div>
+
+                <div class="card">
+                    <div class="title">Branch instructions</div>
+
+                    <p>
+                        These instructions conditionally or unconditionally branch to another location in the bytecode.
+                    </p>
+
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">goto <em>(label)</em>
+                        if_acmpeq <em>(label)</em>
+                        if_acmpne <em>(label)</em>
+                        if_icmpeq <em>(label)</em>
+                        if_icmpne <em>(label)</em>
+                        if_icmplt <em>(label)</em>
+                        if_icmpge <em>(label)</em>
+                        if_icmpgt <em>(label)</em>
+                        if_icmple <em>(label)</em>
+                        ifeq <em>(label)</em>
+                        ifne <em>(label)</em>
+                        iflt <em>(label)</em>
+                        ifge <em>(label)</em>
+                        ifgt <em>(label)</em>
+                        ifle <em>(label)</em>
+                        ifnonnull <em>(label)</em>
+                        ifnull <em>(label)</em>
+                    </div>
+
+                    <div class="syntax-header">Examples</div>
+                    <pre class="example syntax highlight" data-language="jasm">    iload_3             # load the value of int variable 3
+    ifgt positive_value # if it is positive, branch to positive_value
+    # code...
+    goto endif          # unconditionally branch to endif
+
+positive_value:
+    # code...
+
+endif:
+    # code...</pre>
+                </div>
+
+                <div class="card">
+                    <div class="title">Instructions taking type descriptors</div>
+
+                    <p>
+                        There are three instructions that take only a single <a href="descriptors.html#type-descriptor">type descriptor</a> as operand.
+                    </p>
+
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">anewarray <em>(type descriptor)</em>
+                        checkcast <em>(type descriptor)</em>
+                        instanceof <em>(type descriptor)</em>
+                    </div>
+
+                    <div class="syntax-header">Examples</div>
+                    <pre class="example syntax highlight" data-language="jasm">anewarray Ljava/lang/String;    # create a new array of String objects
+checkcast [I                    # throw an exception if the value on top of stack is not an int array
+instanceof Ljava/util/List;     # check whether the value on top of stack is a List</pre>
+                </div>
+
+                <div class="card">
+                    <div class="title">Switch instructions</div>
+
+                    <p>
+                        The Java Virtual Machine supports two instructions for implementing lookup tables, usually used for compiling <code>switch</code> statements.
+                    </p>
+
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">lookupswitch <em>(default label)</em>
+tableswitch <em>(low) (high) (default label)</em></div>
+
+                    <p>
+                        Both of these instructions must be immediately followed by a <a href="directives.html#switch-tables">switch table</a> giving values and corresponding branch labels.
+                    </p>
+
+                    <p>
+                        In these instructions, the operands have the following meanings:
+                    </p>
+                    <ul>
+                        <li><em>Default label:</em> the label to branch to if none of the entries in the switch table match.</li>
+                        <li><em>Low and high:</em> the minimum and maximum values for the switch table.</li>
+                    </ul>
+
+                    <div class="syntax-header">Example</div>
+                    <pre class="syntax example highlight" data-language="jasm">
+    lookupswitch not_prime
+        .table
+            2: prime
+            3: prime
+            5: prime
+            7: prime
+            11: prime
+            13: prime
+            17: prime
+            19: prime
+        .end table
+
+prime:
+    # some code...
+
+not_prime:
+    # some code...</pre>
+                </div>
+
+                <div class="card">
+                    <div class="title">Miscellaneous instructions</div>
+
+                    <p>
+                        Instructions whose operands don’t fit in any other categories are listed here.
+                    </p>
+
+                    <div class="syntax-header">Instructions</div>
+                    <div class="instruction-list syntax">iinc <em>(index, increment)</em>
+                        multianewarray <em>(type descriptor) (dimensions)</em>
+                        new <em>(class name)</em>
+                        newarray <em>(array type)</em>
+                    </div>
+
+                    <p>
+                        In these instructions, the operands have the following meanings:
+                    </p>
+                    <ul>
+                        <li><em>Index:</em> the index of an int local variable</li>
+                        <li><em>Increment:</em> the value (a signed byte) to increment th elocal variable by</li>
+
+                        <li><em>Type descriptor:</em> a <a href="descriptors.html#type-descriptors">type descriptor</a> describing the type of the array to create. It must have at least as many dimensions as the <em>dimensions</em> operand.</li>
+                        <li><em>Dimensions:</em> the number of dimensions (a positive integer) of the array to create</li>
+
+                        <li><em>Class name:</em> name of the class in internal form (using <code>/</code> instead of <code>.</code> to separate packages) to instantiate</li>
+
+                        <li><em>Array type:</em> one of the eight primitive types: byte, short, int, long, float, double, char, or boolean.</li>
+                    </ul>
+
+                    <div class="syntax-header">Examples</div>
+                    <pre class="example syntax highlight" data-language="jasm">iinc 2 -1 # decrement local variable 2 (like i--)
+
+# Make a new three-dimensional array of Strings having one element in each dimension,
+# in other words new String[1][1][1]
+iconst_1
+iconst_1
+iconst_1
+multianewarray [[[Ljava/lang/String; 3
+
+# Create a new instance of the Scanner class (note that this does not call a constructor!)
+new java/util/Scanner
+
+# new int[1000]
+sipush 1000
+newarray int</pre>
+                </div>
+
+                <div class="card">
+                    <div class="title">Unimplemented instructions</div>
+
+                    <p>
+                        There are a few instructions defined in the Java Virtual Machine that jasm does not implement.
+                    </p>
+
+                    <dl>
+                        <dt><code>invokedynamic</code></dt>
+                        <dd>The syntax would be complex and it is not clear how much value this instruction would have for an undergraduate compilers class.</dd>
+
+                        <dt><code>jsr</code>, <code>ret</code></dt>
+                        <dd>These opcodes are deprecated and the JVM verifier does not allow them in recent bytecode.</dd>
+                    </dl>
+                </div>
+
+                <div class="card">
+                    <div class="title">Wide instructions</div>
+
+                    <p>
+                        The JVM defines “wide” (<code>_w</code>) variants for some instructions (<code>goto_w</code>, <code>ldc_w</code>, <code>ldc2_w</code>), as well as a <code>wide</code> instruction prefix that can be combined with several instructions to enable branch offsets and indices to be larger than usually possible.
+                    </p>
+
+                    <p>
+                        jasm handles the widening of instructions transparently, using the <code>_w</code> variant of an instruction or inserting a <code>wide</code> prefix as needed; writing them directly is neither required nor permitted by jasm.
+                    </p>
                 </div>
             </div>
         </main>

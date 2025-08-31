@@ -113,6 +113,7 @@
                 }
                 current_tab = tabs[tab_index];
                 current_tab.classList.add("current");
+                current_tab.scrollIntoView({ block: "center" });
             } else
                 current_tab = null;
             

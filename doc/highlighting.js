@@ -5,15 +5,15 @@
         "java": {
             //"block-comment": /\/\*[\s\S]*?!(\*\/)\*\//mg,
             "block-comment": /\/\*[\s\S]*?\*\//mg,
-            "line-comment": /\/\/[^\n\r$]*[\n\r$]/g,
+            "line-comment": /\/\/[^\n\r$]*([\n\r]|$)/g,
             "string": /"((\\")|([^"]))*"/g,
             "type": /\b((byte)|(short)|(int)|(long)|(float)|(double)|(char)|(boolean))\b/g,
             "keyword": /\b((abstract)|(assert)|(break)|(case)|(catch)|(class)|(const)|(continue)|(default)|(do)|(else)|(enum)|(extends)|(final)|(finally)|(for)|(goto)|(if)|(implements)|(import)|(instanceof)|(interface)|(native)|(new)|(package)|(private)|(protected)|(public)|(return)|(static)|(strictfp)|(super)|(switch)|(synchronized)|(this)|(throw)|(throws)|(transient)|(try)|(void)|(volatile)|(while))\b/g,
-            "number": /\b[\+\-]?((\d+)|(\d+\.\d*)|(\d*\.\d+))([eE]([\+\-]?)\d+)?\b/g,
+            "number": /\b[+\-]?((\d+)|(\d+\.\d*)|(\d*\.\d+))([eE]([+\-]?)\d+)?\b/g,
         },
 
         "jasm": {
-            "line-comment": /#[^\n\r$]*[\n\r$]/g,
+            "line-comment": /#[^\n\r$]*([\n\r]|$)/g,
             "string": /"((\\")|([^"]))*"/g,
             "keyword": /(\.class|\.interface|\.enum|\.source|\.super|\.implements|\.field|\.method|\.code|\.end code|\.table|\.end table)/g,
         },

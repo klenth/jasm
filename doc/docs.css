@@ -307,6 +307,8 @@ a:hover {
         overflow-y: auto;
         z-index: 1;
         background-color: inherit;
+        max-height: 75vh;
+
     }
 
     .fancy nav ul li {
@@ -323,7 +325,7 @@ a:hover {
         position: absolute;
         background-color: var(--color-for-nav-tabs);
         left: 0;
-        right: -28px;
+        right: -128px;
         top: 0;
         bottom: 0;
         transform: skewX(-15deg);

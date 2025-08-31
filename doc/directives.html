@@ -207,7 +207,7 @@
                         If a method is neither <code>abstract</code> nor <code>native</code>, the JVM will throw an error upon loading the class if there was no <code>.code</code> directive. There are many verification checks that the JVM will do upon loading a class (making sure that an empty stack is never popped, etc.) that jasm does not attempt to duplicate.
                     </p>
 
-                    <h2>Switch tables</h2>
+                    <a id="switch-tables"><h2>Switch tables</h2></a>
                     <p>
                         The JVM has two instructions that require a switch table: <code>lookupswitch</code> and <code>tableswitch</code>. Both of these instructions must be immediately followed by a <code>.table</code> directive containing values and branch labels:
                     </p>
