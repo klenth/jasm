@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr" class="fancy">
+<head>
+    <meta charset="utf-8">
+    <title>jasm: a Java Virtual Machine assembler</title>
+    <link rel="stylesheet" href="docs.css">
+    <link rel="stylesheet" href="highlighting.css">
+    <style>
+        pre {
+            font-family: 'Iosevka Kathy Extended', monospace;
+        }
+
+        #type-descriptor-table tr > :first-child {
+            text-align: center;
+            vertical-align: top;
+        }
+
+        #type-descriptor-table tbody tr > :first-child {
+            font-family: 'Iosevka Kathy Extended', monospace;
+        }
+
+        #type-descriptor-table tbody tr:nth-child(2n) > * {
+            background-color: #eee;
+        }
+
+        .placeholder {
+            font-style: italic;
+            color: blue;
+            font-family: 'Iosevka Kathy Extended', monospace;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav>
+    <ul class="card-links"></ul>
+    <div class="icon"></div>
+    <div class="plain-link"><a href="?plain">Printable version</a></div>
+    <span class="dark-mode-toggle" title="Toggle dark mode"></span>
+</nav>
+
+<main class="justified">
+    <div class="title-card">
+        <h1>Type descriptors</h1>
+
+        <p>
+            JVM instructions that refer to fields and methods use <em>descriptors</em> that describe their types. This allows for overloading. The Java language allows overloading only of methods and only by parameter types, but JVM design permits overloading both fields and methods, including (for methods) by return type.
+        </p>
+
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <div class="title">Type descriptors</div>
+
+            <p>
+                <em>Type</em> (or <em>field</em>) <em>descriptors</em> describe a single type, such as the type of a field.
+            </p>
+
+            <table class="indented" id="type-descriptor-table">
+                <thead>
+                <tr>
+                    <th scope="col">Descriptor</th>
+                    <th scope="col">Meaning</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>B</td>
+                    <td>byte</td>
+                </tr>
+                <tr>
+                    <td>S</td>
+                    <td>short</td>
+                </tr>
+                <tr>
+                    <td>I</td>
+                    <td>int</td>
+                </tr>
+                <tr>
+                    <td>J</td>
+                    <td>long</td>
+                </tr>
+                <tr>
+                    <td>F</td>
+                    <td>float</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>double</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>char</td>
+                </tr>
+                <tr>
+                    <td>Z</td>
+                    <td>boolean</td>
+                </tr>
+                <tr>
+                    <td>V</td>
+                    <td>void (only for method return types)</td>
+                </tr>
+                <tr>
+                    <td>L<span class="placeholder">classname</span>;</td>
+                    <td>Class object <br> (<span class="placeholder">classname</span> must be given in <em>internal form</em>, using <code>/</code> instead of <code>.</code> to separate packages)</td>
+                </tr>
+                <tr>
+                    <td>[<span class="placeholder">T</span></td>
+                    <td>
+                        Array of <span class="placeholder">T</span>, where <span class="placeholder">T</span> is another type descriptor
+                        <br>
+                        (more than one <code>[</code> means multidimensional array)
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+
+            <div class="syntax-header" style="margin-top: 24px;">Examples</div>
+            <pre class="example syntax highlight" data-language="jasm">
+D                       # double
+Ljava/lang/String;      # String
+[I                      # int[]
+[[Ljava/lang/Object;    # Object[][]</pre>
+        </div>
+
+        <div class="card">
+            <div class="title">Method descriptors</div>
+
+            <p>
+                <em>Method descriptors</em> describe the types (but not name) of a method’s parameters and return value.
+            </p>
+
+            <div class="syntax-header">Syntax</div>
+            <pre class="syntax">
+(<span class="placeholder">params</span>)<span class="placeholder">return</span></pre>
+            <p>
+                where <span class="placeholder">params</span> consists of zero or more type descriptors juxtaposed (no spaces or commas between them) — the types of the parameters — and <span class="placeholder">return</span> is a type descriptor for the method’s return type.
+            </p>
+
+            <div class="syntax-header" style="margin-top: 24px;">Examples</div>
+            <pre class="example syntax highlight" data-language="jasm"># Descriptors do not include names; the examples below use
+# "f" as a placeholder name
+
+# void f()
+()V
+
+# boolean f(int)
+(I)Z
+
+# String f(int, long, byte)
+(IJB)Ljava/lang/String;
+
+# String f(Object, String)
+(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;
+
+# void f(String[])
+([Ljava/lang/String;)V</pre>
+        </div>
+    </div>
+</main>
+
+<script src="docs.js"></script>
+<script src="highlighting.js"></script>
+</body>
+</html>

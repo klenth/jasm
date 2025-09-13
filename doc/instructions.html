@@ -30,17 +30,6 @@ table.instruction-usage tbody tr:nth-child(2n) td {
 table.instruction-usage tbody td {
     min-width: 256px;
 }
-
-.pip {
-    display: inline-block;
-    padding: 2px 4px;
-    background-color: var(--color-for-chrome);
-    color: var(--color-for-content-background);
-    border-radius: 3px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin-right: 2px;
-}
         </style>
     </head>
 
@@ -338,7 +327,7 @@ ldc2 3.141592653</pre>
                     <ul>
                         <li><em>Class name:</em> the name of the class in internal form (using <code>/</code> instead of <code>.</code> to separate packages) that declares the field</li>
                         <li><em>Field name:</em> the name of the field to get or put</li>
-                        <li><em>Type descriptor:</em> a <a href="descriptors.html#type-descriptors">type descriptor</a> describing the type of the field being get or put</li>
+                        <li><em>Type descriptor:</em> a <a href="descriptors.html#Type_descriptors">type descriptor</a> describing the type of the field being get or put</li>
                     </ul>
 
                     <div class="syntax-header">Examples</div>
@@ -370,7 +359,7 @@ putfield Badger name Ljava/lang/String; # assign a value to the _name_ instance 
                     <ul>
                         <li><em>Class name:</em> the name of the class or interface in internal form (using <code>/</code> instead of <code>.</code> to separate packages) that declares the method</li>
                         <li><em>Method name:</em> the name of the method to call</li>
-                        <li><em>Method descriptor:</em> a <a href="descriptors.html#method-descriptors">method descriptor</a> describing the method to call</li>
+                        <li><em>Method descriptor:</em> a <a href="descriptors.html#Method_descriptors">method descriptor</a> describing the method to call</li>
                     </ul>
 
                     <div class="syntax-header">Examples</div>
@@ -509,7 +498,7 @@ not_prime:
                         <li><em>Index:</em> the index of an int local variable</li>
                         <li><em>Increment:</em> the value (a signed byte) to increment the local variable by</li>
 
-                        <li><em>Type descriptor:</em> a <a href="descriptors.html#type-descriptors">type descriptor</a> describing the type of the array to create. It must have at least as many dimensions as the <em>dimensions</em> operand.</li>
+                        <li><em>Type descriptor:</em> a <a href="descriptors.html#Type_descriptors">type descriptor</a> describing the type of the array to create. It must have at least as many dimensions as the <em>dimensions</em> operand.</li>
                         <li><em>Dimensions:</em> the number of dimensions (a positive integer) of the array to create</li>
 
                         <li><em>Class name:</em> name of the class in internal form (using <code>/</code> instead of <code>.</code> to separate packages) to instantiate</li>

@@ -6,6 +6,10 @@
         <link rel="stylesheet" href="docs.css">
         <link rel="stylesheet" href="highlighting.css">
         <style>
+pre, code {
+    font-family: 'Iosevka Kathy Extended', monospace;
+}
+
 #flag-table tbody tr :nth-child(2) {
     text-align: center;
 }
@@ -56,13 +60,13 @@
 
                     <h2><code>.class</code>/<code>.interface</code>/<code>.enum</code> directive</h2>
                     <p>
-                        A jasm file must have at least one <code>.class</code>/<code>.interface</code><code>.enum</code> directive, otherwise there is nothing to assemble. The syntax for all three is the same:
+                        A jasm file must have at least one <code>.class</code>/<code>.interface</code>/<code>.enum</code> directive, otherwise there is nothing to assemble. The syntax for all three is the same:
                     </p>
 <div class="syntax-header">Syntax</div>
 <pre class="syntax highlight" data-language="jasm">
-.class [<em>flags...</em>] (<em>class name</em>)
-.interface [<em>flags...</em>] (<em>interface name</em>)
-.enum [<em>flags...</em>] (<em>enum name</em>)
+.class (<em>flags...</em>) (<em>class name</em>)
+.interface (<em>flags...</em>) (<em>interface name</em>)
+.enum (<em>flags...</em>) (<em>enum name</em>)
 </pre>
 
 <div class="syntax-header">Examples</div>
@@ -79,7 +83,7 @@
                         <em>class name</em> is the name of the class, interface, or enum being assembled, as an <em>internal</em> name (i.e. with <code>/</code> instead of <code>.</code> for package names).
                     </p>
                     <p>
-                        A jasm input file can have multiple <code>.class</code>/<code>.interface</code>/<code>.enum</code> directives, each resulting in generating another bytecode file.
+                        A jasm input file can have multiple <code>.class</code>/<code>.interface</code>/<code>.enum</code> directives; one bytecode file will be generated for each.
                     </p>
 
                     <h2><code>.source</code> directive</h2>
@@ -95,10 +99,7 @@
 </pre>
 
                     <p>
-                        The <code>.source</code> directive gives the name of the source file that the class was compiled from. For example, when <code>SomeJavaClass.java</code> is compiled, its <code>.source</code> is SomeJavaClass.class.
-                    </p>
-                    <p>
-                        This directive is optional and has no effect on assembly beyond setting the named source in the resulting bytecode.
+                        The <code>.source</code> directive gives the name of the source file that the class was compiled from. This directive is optional and has no effect on assembly beyond setting the named source in the resulting bytecode.
                     </p>
 
                     <h2><code>.super</code> and <code>.implements</code> directives</h2>
@@ -122,7 +123,7 @@
                         Both the <em>superclass name</em> and <em>superinterface name</em> are given as <em>internal</em> names (i.e. with <code>/</code> instead of <code>.</code> for package names), for example <code>java/lang/Object</code> or <code>java/io/Serializable</code>. The <code>.super</code> directive can be given at most once per <code>.class</code>/<code>.interface</code>/<code>.enum</code> directive, while <code>.implements</code> can be given any number of times.
                     </p>
                     <p>
-                        In the Java language, every class (except <code>Object</code>) <em>must</em> have a superclass; if it is not declared as extending a class, then <code>Object</code> is the superclass. In the JVM, there is no such requirement; however, note that the JVM will throw an error if a class constructor does not call a superclass constructor, so that constructible classes must have <em>some</em> superclass. However, if a class will consist of only static fields and methods, it is not necessary to use <code>.super</code>.
+                        In the Java language, every class (except <code>Object</code>) <em>must</em> have a superclass; if it is not declared as extending a class, then <code>Object</code> is the superclass. In the JVM, there is no such requirement; however, note that the JVM will throw an error if a class constructor does not call a superclass constructor, so that constructible classes must have <em>some</em> superclass. However, if a class will consist of only static fields and methods, it is may not be necessary to use <code>.super</code>.
                     </p>
                 </div>
 
@@ -134,11 +135,14 @@
                     </p>
                     <div class="syntax-header">Syntax</div>
 <pre class="syntax highlight" data-language="jasm">
-.field [<em>flags...</em>] (<em>field name</em>) (<em>descriptor</em>)
+.field (<em>flags...</em>) (<em>field name</em>) (<em>descriptor</em>)
 </pre>
                     <div class="syntax-header">Examples</div>
                     <pre class="example syntax highlight" data-language="jasm">
+# public static final double PI;
 .field public static final PI D
+
+# private String name;
 .field private name Ljava/lang/String;
 </pre>
                     <p>
@@ -163,7 +167,7 @@
                     </p>
                     <div class="syntax-header">Syntax</div>
 <pre class="syntax highlight" data-language="jasm">
-.method [<em>flags...</em>] (<em>method name</em>) (<em>method descriptor</em>)
+.method (<em>flags...</em>) (<em>method name</em>) (<em>method descriptor</em>)
 </pre>
 
                     <div class="syntax-header">Examples</div>
@@ -176,7 +180,8 @@
     return
 .end code
 
-# an abstract method
+# an abstract method:
+# public abstract boolean consumeTask(some.package.name.Task);
 .method public abstract consumeTask (Lsome/package/name/Task;)Z
 # abstract, so no .code
 
@@ -193,7 +198,7 @@
                         <em>flags...</em> is a (space-separated) list of <a href="#Flags">flags</a>.
                     </p>
                     <p>
-                        <em>method name</em> is the name of the method.
+                        <em>method name</em> is the name of the method. There are two special method names in the JVM: <code>&lt;init&gt;</code> for constructors (although constructors are named the same as the class in Java code, they are called <code>&lt;init&gt;</code> in compiled bytecode) and <code>&lt;clinit&gt;</code> for static class initializers (<code>static { ... }</code> blocks in Java). Method names cannot contain any of the characters <code>.;[/</code>, and except for <code>&lt;init&gt;</code>/<code>&lt;clinit&gt;</code>, cannot contain <code>&lt;</code> or <code>&gt;</code>. (The JVM permits spaces and other whitespace in method names but jasm does not support this.)
                     </p>
                     <p>
                         <em>method descriptor</em> is a <a href="descriptors.html#Method_descriptors">method descriptor</a> giving the types of any parameters as well as the return type.
